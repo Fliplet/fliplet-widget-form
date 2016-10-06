@@ -1,6 +1,7 @@
 var data = Fliplet.Widget.getData() || {};
 
 var $dataSource = $('select[name="dataSource"]');
+var organizationId = Fliplet.Env.get('organizationId');
 
 var defaultForm = [
   '<div class="form-group">',
@@ -49,7 +50,7 @@ Fliplet.Widget.onSaveRequest(function () {
 });
 
 Fliplet.DataSources.get({
-  organizationId: Fliplet.Env.get('organizationId')
+  organizationId: organizationId
 }).then(function (dataSources) {
   dataSources.forEach(function (d) {
     $dataSource.append('<option value="' + d.id + '">' + d.name + '</option>');
@@ -68,7 +69,10 @@ $('[data-create-source]').click(function (event) {
     return;
   }
 
-  Fliplet.DataSources.create({ name: name }).then(function (d) {
+  Fliplet.DataSources.create({
+    name: name, organizationId:
+    organizationId
+  }).then(function (d) {
     $dataSource.append('<option value="' + d.id + '">' + d.name + '</option>');
     $dataSource.val(d.id);
   });
