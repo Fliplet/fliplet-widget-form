@@ -59,3 +59,17 @@ Fliplet.DataSources.get({
     $dataSource.val(data.dataSourceId);
   }
 });
+
+$('[data-create-source]').click(function (event) {
+  event.preventDefault();
+  var name = prompt('Please type a name for your data source:');
+
+  if (!name) {
+    return;
+  }
+
+  Fliplet.DataSources.create({ name: name }).then(function (d) {
+    $dataSource.append('<option value="' + d.id + '">' + d.name + '</option>');
+    $dataSource.val(d.id);
+  });
+});
