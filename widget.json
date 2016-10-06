@@ -16,6 +16,7 @@
     "assets": [
       "vendor/codemirror.css",
       "vendor/codemirror.js",
+      "vendor/codemirror.xml.js",
       "vendor/codemirror.htmlmixed.js",
       "css/interface.css",
       "js/interface.js"
