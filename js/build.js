@@ -26,7 +26,7 @@ $('.fl-form').each(function () {
   $form.on('click', '[data-start]', function (event) {
     event.preventDefault();
     $formResult.fadeOut(function () {
-      $formHtml.slideDown();
+      $formHtml.fadeIn();
     });
   });
 });
