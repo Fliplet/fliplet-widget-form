@@ -5,8 +5,12 @@
       <div class="form-result">{{{formResult}}}</div>
     </form>
   {{else}}
-    <h4>Please configure your form</h4>
+    <div class="alert alert-warning" role="alert">
+      You haven't added a HTML for your form
+    </div>
   {{/if}}
 {{else}}
-  <p>The data source for this form has not been configured.</p>
+  <div class="alert alert-warning" role="alert">
+    <strong>Form component</strong> — The data source for this form has not been configured yet.
+  </div>
 {{/if}}
