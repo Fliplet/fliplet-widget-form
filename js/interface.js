@@ -4,6 +4,9 @@ var $dataSource = $('select[name="dataSource"]');
 
 var defaultForm = [
   '<div class="form-group">',
+  '   <input name="fullname" placeholder="Full name" class="form-control" required/>',
+  '</div>',
+  '<div class="form-group">',
   '   <input type="email" name="email" placeholder="Email address" class="form-control" required/>',
   '</div>',
   '<div class="form-group">',
@@ -45,7 +48,9 @@ Fliplet.Widget.onSaveRequest(function () {
   $('form').submit();
 });
 
-Fliplet.DataSources.get().then(function (dataSources) {
+Fliplet.DataSources.get({
+  organizationId: Fliplet.Env.get('organizationId')
+}).then(function (dataSources) {
   dataSources.forEach(function (d) {
     $dataSource.append('<option value="' + d.id + '">' + d.name + '</option>');
   });
