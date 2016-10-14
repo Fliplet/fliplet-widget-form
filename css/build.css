@@ -1,3 +1,50 @@
 .fl-form .form-result {
-  display: none;
+    display: none;
+}
+
+.btn-primary,
+.btn-secondary {
+    display: block;
+    clear: both;
+    width: 100%;
+    padding: 10px 16px;
+    font-size: 18px;
+    line-height: 1.33;
+    border: none;
+    border-radius: 6px;
+    text-align: center;
+    cursor: pointer;
+}
+
+.btn-primary:focus,
+.btn-primary:hover,
+.btn-secondary:focus,
+.btn-secondary:hover,
+.btn:active:focus {
+    outline: none;
+}
+@media (min-width:640px) {
+    .btn-primary {
+        clear: none;
+        display: inline-block;
+        width: auto;
+        max-width: 100%;
+    }
+
+    .btn-secondary {
+        clear: none;
+        display: inline-block;
+        width: auto;
+        max-width: 100%;
+    }
+}
+
+.form-btns button + button {
+    margin-top: 10px;
+}
+@media screen and (min-width: 640px) {
+    .form-btns button + button {
+        margin-top: 0;
+        margin-right: 10px;
+    }
 }
