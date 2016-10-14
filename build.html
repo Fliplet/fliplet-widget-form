@@ -1,16 +1,14 @@
-{{#if dataSourceId}}
-  {{#if formHtml}}
-    <form data-form-id="{{id}}" class="fl-form">
-      <div class="form-html">{{{formHtml}}}</div>
-      <div class="form-result">{{{formResult}}}</div>
-    </form>
-  {{else}}
-    <div class="alert alert-warning" role="alert">
-      You haven't added a HTML for your form
-    </div>
-  {{/if}}
+{{#if dataSourceId}} {{#if formHtml}}
+<form data-form-id="{{id}}" class="fl-form form-horizontal">
+    <div class="form-html">{{{formHtml}}}</div>
+    <div class="form-result">{{{formResult}}}</div>
+</form>
 {{else}}
-  <div class="alert alert-warning" role="alert">
+<div class="alert alert-warning" role="alert">
+    You haven't added a HTML for your form
+</div>
+{{/if}} {{else}}
+<div class="alert alert-warning" role="alert">
     <strong>Form component</strong> — The data source for this form has not been configured yet.
-  </div>
+</div>
 {{/if}}
