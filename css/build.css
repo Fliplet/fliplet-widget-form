@@ -42,7 +42,19 @@
 .form-btns button + button {
     margin-top: 10px;
 }
+
+.form-control {
+    border: 1px solid #e5e5e5;
+    border-radius: 3px;
+    box-shadow: none;
+    background-color: #fbfbfb;
+    height: 43px;
+}
 @media screen and (min-width: 640px) {
+    .control-label {
+        padding-top: 12px !important;
+    }
+
     .form-btns button + button {
         margin-top: 0;
         margin-right: 10px;
