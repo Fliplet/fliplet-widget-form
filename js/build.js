@@ -17,6 +17,7 @@ $('.fl-form').each(function () {
         return connection.insert(fields);
       }).then(function onSaved() {
         $formResult.fadeIn();
+        $form.trigger("reset");
       }, function onError(error) {
         console.error(error);
       });
