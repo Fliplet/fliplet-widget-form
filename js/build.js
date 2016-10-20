@@ -8,13 +8,22 @@ $('.fl-form').each(function () {
     event.preventDefault();
     $formHtml.fadeOut(function () {
       var fields = {};
+      var formData = new FormData();
+
       $form.find('[name]').each(function () {
         var $el = $(this);
-        fields[$el.attr('name')] = $el.val();
+        var fieldName = $el.attr('name');
+        if ($el.attr('type') === 'file') {
+          formData.append(fieldName, $el[0].files[0]);
+        } else {
+          formData.append(fieldName, $el.val());
+        }
       });
 
       Fliplet.DataSources.connect(data.dataSourceId).then(function (connection) {
-        return connection.insert(fields);
+        return connection.insert(formData, {
+          multipart: true
+        });
       }).then(function onSaved() {
         $formResult.fadeIn();
         $form.trigger("reset");
