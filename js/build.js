@@ -8,9 +8,27 @@ $('.fl-form').each(function () {
     event.preventDefault();
     $formHtml.fadeOut(function () {
       var fields = {};
+
       $form.find('[name]').each(function () {
         var $el = $(this);
-        fields[$el.attr('name')] = $el.val();
+        var name = $el.attr('name');
+        var type = $el.attr('type');
+
+        if (type === 'radio') {
+          if ($el.is(':checked')) {
+            fields[name] = $el.val();
+          }
+        } else if (type === 'checkbox') {
+          if (!fields[name]) {
+            fields[name] = [];
+          }
+
+          if ($el.is(':checked')) {
+            fields[name].push($el.val());
+          }
+        } else {
+          fields[name] = $el.val();
+        }
       });
 
       Fliplet.DataSources.connect(data.dataSourceId).then(function (connection) {
