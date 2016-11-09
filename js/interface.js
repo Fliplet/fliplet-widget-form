@@ -40,7 +40,7 @@ var defaultForm = [
   '</div>',
   '<hr class="hr-normal">',
   '<div class="form-btns clearfix">',
-    '<button type="submit" class="btn btn-primary pull-right">Submit</button>',
+    '<button type="submit" class="btn btn-primary pull-right" data-edit-label="Update">Submit</button>',
     '<button type="reset" class="btn btn-secondary pull-right">Clear</button>',
   '</div>'
 ].join("\r\n");
