@@ -8,15 +8,26 @@ $('.fl-form').each(function () {
     event.preventDefault();
     $formHtml.fadeOut(function () {
       var fields = {};
-      var formData = new FormData();
 
       $form.find('[name]').each(function () {
         var $el = $(this);
-        var fieldName = $el.attr('name');
-        if ($el.attr('type') === 'file') {
-          formData.append(fieldName, $el[0].files[0]);
+        var name = $el.attr('name');
+        var type = $el.attr('type');
+
+        if (type === 'radio') {
+          if ($el.is(':checked')) {
+            fields[name] = $el.val();
+          }
+        } else if (type === 'checkbox') {
+          if (!fields[name]) {
+            fields[name] = [];
+          }
+
+          if ($el.is(':checked')) {
+            fields[name].push($el.val());
+          }
         } else {
-          formData.append(fieldName, $el.val());
+          fields[name] = $el.val();
         }
       });
 
