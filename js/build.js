@@ -42,18 +42,15 @@ $('.fl-form').each(function () {
           return alert('You must be connected to submit this form');
         }
 
-
         formData = new FormData();
 
         fileNames.forEach(function (fileName) {
-          formData.append(fileName, files[fileName]);
-
           var fieldFiles = files[fileName];
           var file;
 
           for (var i = 0; i < fieldFiles.length; i++) {
             file = fieldFiles.item(i);
-            formData.append('files[' + i + ']', file);
+            formData.append(fileName, file);
           }
         });
 
