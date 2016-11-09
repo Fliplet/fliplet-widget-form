@@ -8,6 +8,8 @@ $('.fl-form').each(function () {
     event.preventDefault();
     $formHtml.fadeOut(function () {
       var fields = {};
+      var files = {};
+      var formData;
 
       $form.find('[name]').each(function () {
         var $el = $(this);
@@ -26,18 +28,45 @@ $('.fl-form').each(function () {
           if ($el.is(':checked')) {
             fields[name].push($el.val());
           }
+        } else if (type === 'file') {
+          files[name] = $el[0].files;
         } else {
           fields[name] = $el.val();
         }
       });
 
-      Fliplet.DataSources.connect(data.dataSourceId).then(function (connection) {
-        return connection.insert(formData, {
-          multipart: true
+      // Transform to FormData if files were posted
+      var fileNames = Object.keys(files);
+      if (fileNames.length) {
+        if (!Fliplet.Navigator.isOnline()) {
+          return alert('You must be connected to submit this form');
+        }
+
+
+        formData = new FormData();
+
+        fileNames.forEach(function (fileName) {
+          formData.append(fileName, files[fileName]);
+
+          var fieldFiles = files[fileName];
+          var file;
+
+          for (var i = 0; i < fieldFiles.length; i++) {
+            file = fieldFiles.item(i);
+            formData.append('files[' + i + ']', file);
+          }
         });
+
+        Object.keys(fields).forEach(function (fieldName) {
+          formData.append(fieldName, fields[fieldName]);
+        });
+      }
+
+      Fliplet.DataSources.connect(data.dataSourceId).then(function (connection) {
+        return connection.insert(formData || fields);
       }).then(function onSaved() {
         $formResult.fadeIn();
-        $form.trigger("reset");
+        $form.trigger('reset');
       }, function onError(error) {
         console.error(error);
       });
