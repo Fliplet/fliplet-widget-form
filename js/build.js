@@ -1,8 +1,19 @@
 $('.fl-form').each(function () {
+  var connection;
   var $form = $(this);
   var $formHtml = $form.find('.form-html');
   var $formResult = $form.find('.form-result');
   var data = Fliplet.Widget.getData($form.data('form-id'));
+  var dataSourceId;
+  var dataSourceEntryId;
+
+  function getConnection() {
+    if (!connection) {
+      connection = Fliplet.DataSources.connect(data.dataSourceId);
+    }
+
+    return connection;
+  }
 
   $form.submit(function (event) {
     event.preventDefault();
@@ -59,11 +70,18 @@ $('.fl-form').each(function () {
         });
       }
 
-      Fliplet.DataSources.connect(data.dataSourceId).then(function (connection) {
-        return connection.insert(formData || fields);
+      formData = formData || fields;
+
+      getConnection().then(function (connection) {
+        if (dataSourceEntryId) {
+          return connection.update(dataSourceEntryId, formData);
+        }
+
+        return connection.insert(formData);
       }).then(function onSaved() {
         $formResult.fadeIn();
         $form.trigger('reset');
+        bindEditMode();
       }, function onError(error) {
         console.error(error);
       });
@@ -76,4 +94,29 @@ $('.fl-form').each(function () {
       $formHtml.fadeIn();
     });
   });
+
+  function bindEditMode() {
+    if (location.search.indexOf('dataSourceId=' + data.dataSourceId) !== -1) {
+      getConnection().then(function (connection) {
+        dataSourceEntryId = parseInt(location.search.match(/dataSourceEntryId=([0-9]+)/)[1]);
+        return connection.findById(dataSourceEntryId);
+      }).then(function (dataSourceEntry) {
+        Object.keys(dataSourceEntry.data).forEach(function (key) {
+          $form.find('[name="' + key + '"]').val(dataSourceEntry.data[key]);
+        });
+
+        var $submit = $form.find('[type="submit"]');
+        var editLabel = $submit.data('edit-label');
+        if (editLabel) {
+          $submit.html(editLabel); // button
+          $submit.val(editLabel);  // input
+        }
+      }, function () {
+        // Entry not found, or user has got no access to it
+        dataSourceEntryId = null;
+      });
+    }
+  }
+
+  bindEditMode();
 });
