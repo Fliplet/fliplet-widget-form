@@ -23,6 +23,35 @@
 .btn:active:focus {
     outline: none;
 }
+
+.text-helper {
+    margin-top: 0.5em;
+    font-size: 0.8em;
+    display: block;
+}
+
+.fileUpload {
+    position: relative;
+    overflow: hidden;
+    padding-right: 40px;
+}
+
+.fileUpload .fa {
+    display: block;
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    line-height: 20px;
+    font-size: 20px;
+    top: 50%;
+    margin-top: -10px;
+    right: 10px;
+    color: #FFF;
+}
+
+.fileUpload input[type="file"] {
+    display: none;
+}
 @media (min-width:640px) {
     .btn-primary {
         clear: none;
