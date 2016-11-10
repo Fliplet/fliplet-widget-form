@@ -47,7 +47,7 @@ var defaultForm = [
         '<i class="fa fa-plus" aria-hidden="true"></i> Choose a file',
         '<input type="file" id="file_upload" name="Uplaod an attachment" class="input-file selectfile" multiple>',
       '</label>',
-      '<span class="text-helper"></span>',
+      '<span class="file-name text-helper"></span>',
     '</div>',
   '</div>',
   '<hr class="hr-normal">',
