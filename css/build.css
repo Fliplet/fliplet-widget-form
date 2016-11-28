@@ -90,6 +90,9 @@ a {
     border-radius: 6px;
     webkit-box-shadow: none;
     box-shadow: none;
+}
+
+input.form-control {
     -webkit-appearance: none;
 }
 
@@ -103,10 +106,7 @@ textarea.form-control {
     line-height: 16px;
     padding: 15px;
     max-width: 100%;
-}
-
-select.form-control {
-    -webkit-appearance: initial;
+    -webkit-appearance: none;
 }
 
 .form-group .input-group {
