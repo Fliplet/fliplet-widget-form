@@ -132,7 +132,11 @@ $('.fl-form').each(function () {
               $input.val(value);
               $form.prepend($input);
             } else {
-              $input.val(value);
+              if (type === 'radio') {
+                $input.filter('[value="' + value + '"]').prop('checked', true)
+              } else {
+                $input.val(value);
+              }
             }
           }
         });
