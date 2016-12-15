@@ -133,7 +133,7 @@ $('.fl-form').each(function () {
               $form.prepend($input);
             } else {
               if (type === 'radio') {
-                $input.filter('[value="' + value + '"]').prop('checked', true)
+                $input.filter('[value="' + value + '"]').prop('checked', true);
               } else {
                 $input.val(value);
               }
