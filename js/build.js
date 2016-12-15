@@ -124,7 +124,7 @@ $('.fl-form').each(function () {
             value.forEach(function (val) {
               $input.filter('[value="' + val + '"]')
                 .prop('checked', true)
-                .prop('selected', true)
+                .prop('selected', true);
             });
           } else {
             if (!$input.length || type === 'file') {
