@@ -11,7 +11,8 @@
     "dependencies": [
       "fliplet-core",
       "fliplet-datasources",
-      "fliplet-studio-ui"
+      "fliplet-studio-ui",
+      "fliplet-media"
     ],
     "assets": [
       "vendor/codemirror.css",
