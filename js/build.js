@@ -79,12 +79,17 @@ $('.fl-form').each(function () {
 
       formData = formData || fields;
 
+      var options = {};
+      if (data.mediaFolderId) {
+        options.mediaFolderId = data.mediaFolderId;
+      }
+
       getConnection().then(function (connection) {
         if (dataSourceEntryId) {
-          return connection.update(dataSourceEntryId, formData);
+          return connection.update(dataSourceEntryId, formData, options);
         }
 
-        return connection.insert(formData);
+        return connection.insert(formData, options);
       }).then(function onSaved() {
         $formResult.fadeIn();
         $form.trigger('reset');
