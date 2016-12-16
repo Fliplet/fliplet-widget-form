@@ -80,8 +80,8 @@ $('.fl-form').each(function () {
       formData = formData || fields;
 
       var options = {};
-      if (data.mediaFolderId) {
-        options.mediaFolderId = data.mediaFolderId;
+      if (data.folderId) {
+        options.folderId = data.folderId;
       }
 
       getConnection().then(function (connection) {

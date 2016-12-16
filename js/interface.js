@@ -70,7 +70,7 @@ $('form').submit(function (event) {
     formHtml: formHtml.getValue(),
     formResult: formResult.getValue(),
     dataSourceId: $dataSource.val(),
-    mediaFolderId: $mediaFolder.val()
+    folderId: $mediaFolder.val()
   }).then(function () {
     Fliplet.Widget.complete();
   });
@@ -100,8 +100,8 @@ Fliplet.Media.Folders.get({
     $mediaFolder.append('<option value="' + f.id + '">' + f.name + '</option>');
   });
 
-  if (data.mediaFolderId) {
-    $mediaFolder.val(data.mediaFolderId);
+  if (data.folderId) {
+    $mediaFolder.val(data.folderId);
   }
 });
 
