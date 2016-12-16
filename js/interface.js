@@ -1,6 +1,7 @@
 var data = Fliplet.Widget.getData() || {};
 
 var $dataSource = $('select[name="dataSource"]');
+var $mediaFolder = $('select[name="mediaFolder"]');
 var organizationId = Fliplet.Env.get('organizationId');
 
 var defaultForm = [
@@ -68,7 +69,8 @@ $('form').submit(function (event) {
   Fliplet.Widget.save({
     formHtml: formHtml.getValue(),
     formResult: formResult.getValue(),
-    dataSourceId: $dataSource.val()
+    dataSourceId: $dataSource.val(),
+    folderId: $mediaFolder.val()
   }).then(function () {
     Fliplet.Widget.complete();
   });
@@ -88,6 +90,18 @@ Fliplet.DataSources.get({
 
   if (data.dataSourceId) {
     $dataSource.val(data.dataSourceId);
+  }
+});
+
+Fliplet.Media.Folders.get({
+  organizationId: Fliplet.Env.get('organizationId')
+}).then(function (response) {
+  response.folders.forEach(function (f) {
+    $mediaFolder.append('<option value="' + f.id + '">' + f.name + '</option>');
+  });
+
+  if (data.folderId) {
+    $mediaFolder.val(data.folderId);
   }
 });
 
