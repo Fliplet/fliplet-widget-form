@@ -1,24 +1,25 @@
 var data = Fliplet.Widget.getData() || {};
 
 var $dataSource = $('select[name="dataSource"]');
+var $mediaFolder = $('select[name="mediaFolder"]');
 var organizationId = Fliplet.Env.get('organizationId');
 
 var defaultForm = [
   '<div class="form-group">',
-    '<label for="first-name" class="col-sm-6 control-label">First name</label>',
-    '<div class="col-sm-6">',
+    '<label for="first-name" class="col-sm-12 control-label">First name</label>',
+    '<div class="col-sm-12">',
       '<input type="text" name="first-name" class="form-control" placeholder="">',
     '</div>',
   '</div>',
   '<div class="form-group">',
-    '<label for="last-name" class="col-sm-6 control-label">Last name</label>',
-    '<div class="col-sm-6">',
+    '<label for="last-name" class="col-sm-12 control-label">Last name</label>',
+    '<div class="col-sm-12">',
       '<input type="text" name="last-name" class="form-control" placeholder="">',
     '</div>',
   '</div>',
   '<div class="form-group">',
-    '<label for="nature-inquiry" class="col-sm-6 control-label">Nature of inquiry</label>',
-    '<div class="col-sm-6">',
+    '<label for="nature-inquiry" class="col-sm-12 control-label">Nature of inquiry</label>',
+    '<div class="col-sm-12">',
       '<select class="form-control" name="nature-inquiry">',
         '<option>Select one</option>',
         '<option value="Feedback">Feedback</option>',
@@ -27,20 +28,20 @@ var defaultForm = [
     '</div>',
   '</div>',
   '<div class="form-group">',
-    '<label for="email" class="col-sm-6 control-label">Email</label>',
-    '<div class="col-sm-6">',
+    '<label for="email" class="col-sm-12 control-label">Email</label>',
+    '<div class="col-sm-12">',
       '<input type="email" name="email" class="form-control" placeholder="">',
     '</div>',
   '</div>',
   '<div class="form-group">',
-    '<label for="inquiry" class="col-sm-6 control-label">inquiry</label>',
-    '<div class="col-sm-6">',
+    '<label for="inquiry" class="col-sm-12 control-label">inquiry</label>',
+    '<div class="col-sm-12">',
       '<textarea class="form-control" name="inquiry" id="inquiry1" rows="3"></textarea>',
     '</div>',
   '</div>',
   '<hr class="hr-normal">',
   '<div class="form-btns clearfix">',
-    '<button type="submit" class="btn btn-primary pull-right">Submit</button>',
+    '<button type="submit" class="btn btn-primary pull-right" data-edit-label="Update">Submit</button>',
     '<button type="reset" class="btn btn-secondary pull-right">Clear</button>',
   '</div>'
 ].join("\r\n");
@@ -68,7 +69,8 @@ $('form').submit(function (event) {
   Fliplet.Widget.save({
     formHtml: formHtml.getValue(),
     formResult: formResult.getValue(),
-    dataSourceId: $dataSource.val()
+    dataSourceId: $dataSource.val(),
+    folderId: $mediaFolder.val()
   }).then(function () {
     Fliplet.Widget.complete();
   });
@@ -88,6 +90,18 @@ Fliplet.DataSources.get({
 
   if (data.dataSourceId) {
     $dataSource.val(data.dataSourceId);
+  }
+});
+
+Fliplet.Media.Folders.get({
+  organizationId: Fliplet.Env.get('organizationId')
+}).then(function (response) {
+  response.folders.forEach(function (f) {
+    $mediaFolder.append('<option value="' + f.id + '">' + f.name + '</option>');
+  });
+
+  if (data.folderId) {
+    $mediaFolder.val(data.folderId);
   }
 });
 
