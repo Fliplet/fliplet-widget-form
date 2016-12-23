@@ -16,6 +16,8 @@ $('.fl-form').each(function () {
   }
 
   $form.submit(function (event) {
+    Fliplet.Analytics.trackEvent('form', 'submit');
+
     event.preventDefault();
     $formHtml.fadeOut(function () {
       var fields = {};
@@ -105,6 +107,10 @@ $('.fl-form').each(function () {
     $formResult.fadeOut(function () {
       $formHtml.fadeIn();
     });
+  });
+
+  $form.on('reset', function onResetForm() {
+    Fliplet.Analytics.trackEvent('form', 'reset');
   });
 
   function bindEditMode() {
