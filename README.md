@@ -5,7 +5,8 @@
 You can access form instances
 
 ```js
-var pageForms = Fliplet.Widget.get('com.fliplet.form').forms(); 
+var pageForms = Fliplet.Widget.get('com.fliplet.form').forms();
+var myForm = pageForms[UUID];
 ```
 
 ## Options
@@ -13,7 +14,6 @@ var pageForms = Fliplet.Widget.get('com.fliplet.form').forms();
 ### Map data before sent
 
 ```js
-var myForm = pageForms[UUID];
 myForm.mapData = function(data) {
   // Do whatever to data
   return data;
