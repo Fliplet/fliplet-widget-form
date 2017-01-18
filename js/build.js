@@ -91,6 +91,8 @@ $('.fl-form').each(function () {
 
       formData = formData || fields;
 
+      }
+
       var options = {};
       if (data.folderId) {
         options.folderId = data.folderId;
