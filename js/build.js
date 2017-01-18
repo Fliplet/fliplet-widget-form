@@ -4,8 +4,18 @@ $('.fl-form').each(function () {
   var $formHtml = $form.find('.form-html');
   var $formResult = $form.find('.form-result');
   var data = Fliplet.Widget.getData($form.data('form-id'));
+  var uuid = $form.data('form-uuid');
   var dataSourceId;
   var dataSourceEntryId;
+
+  window.FlipletForms = window.FlipletForms || {};
+
+  var formInstance = {
+    el: this,
+    data: data
+  };
+
+  window.FlipletForms[uuid] = formInstance;
 
   function getConnection() {
     if (!connection) {
