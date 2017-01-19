@@ -5,11 +5,10 @@
 You can access form instances
 
 ```js
-var pageForms = Fliplet.Widget.get('com.fliplet.form').forms();
-var myForm = pageForms[UUID];
+var myForm = Fliplet.Widget.get('com.fliplet.form').forms(UUID);
 ```
 
-## Options
+## Dev Options
 
 ### Map data before sent
 

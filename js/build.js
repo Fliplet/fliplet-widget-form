@@ -180,8 +180,8 @@
 
   Fliplet.Widget.register('com.fliplet.form', function () {
     return {
-      forms: function () {
-        return forms;
+      forms: function (uuid) {
+        return forms[uuid];
       }
     }
   });
