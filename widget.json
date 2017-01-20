@@ -27,7 +27,8 @@
     "dependencies": [
       "bootstrap",
       "fliplet-core",
-      "fliplet-datasources"
+      "fliplet-datasources",
+      "tinymce"
     ],
     "assets": [
       "css/build.css",

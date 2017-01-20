@@ -175,6 +175,20 @@
       }
     }
 
+    tinymce.init({
+      selector: 'textarea[data-tinymce]',
+      theme: 'modern',
+      plugins: [
+        'advlist lists image charmap hr',
+        'searchreplace insertdatetime table textcolor colorpicker'
+      ],
+      toolbar: 'formatselect | fontselect fontsizeselect | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | blockquote subscript superscript | table charmap hr | removeformat',
+      menubar: false,
+      statusbar: true,
+      inline: false,
+      resize: true
+    });
+
     bindEditMode();
   });
 
