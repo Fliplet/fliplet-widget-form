@@ -8,6 +8,7 @@
     var $formResult = $form.find('.form-result');
     var data = Fliplet.Widget.getData($form.data('form-id'));
     var uuid = $form.data('form-uuid');
+    var editModeEnabled = true;
     var dataSourceId;
     var dataSourceEntryId;
 
@@ -109,8 +110,7 @@
           return connection.insert(formData, options);
         }).then(function onSaved() {
           $formResult.fadeIn();
-          $form.trigger('reset');
-          bindEditMode();
+          resetForm();
         }, function onError(error) {
           console.error(error);
         });
@@ -128,8 +128,18 @@
       Fliplet.Analytics.trackEvent('form', 'reset');
     });
 
+    formInstance.toggleEditMode = function (enabled) {
+      editModeEnabled = !!enabled;
+      resetForm();
+    };
+
+    function resetForm() {
+      $form.trigger('reset');
+      bindEditMode();
+    }
+
     function bindEditMode() {
-      if (location.search.indexOf('dataSourceId=' + data.dataSourceId) !== -1) {
+      if (editModeEnabled && location.search.indexOf('dataSourceId=' + data.dataSourceId) !== -1) {
         getConnection().then(function (connection) {
           dataSourceEntryId = parseInt(location.search.match(/dataSourceEntryId=([0-9]+)/)[1]);
           return connection.findById(dataSourceEntryId);
@@ -181,7 +191,13 @@
   Fliplet.Widget.register('com.fliplet.form', function () {
     return {
       forms: function (uuid) {
-        return forms[uuid];
+        if (uuid) {
+          return forms[uuid];
+        }
+
+        return Object.keys(forms).map(function (uuid) {
+          return forms[uuid];
+        });
       }
     }
   });
