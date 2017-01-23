@@ -139,9 +139,9 @@
     }
 
     function bindEditMode() {
-      if (editModeEnabled && location.search.indexOf('dataSourceId=' + data.dataSourceId) !== -1) {
+      if (editModeEnabled && Fliplet.Navigate.query.dataSourceId === data.dataSourceId) {
         getConnection().then(function (connection) {
-          dataSourceEntryId = parseInt(location.search.match(/dataSourceEntryId=([0-9]+)/)[1]);
+          dataSourceEntryId = parseInt(Fliplet.Navigate.query.dataSourceEntryId);
           return connection.findById(dataSourceEntryId);
         }).then(function (dataSourceEntry) {
           $form.find('input.fl-data[type="hidden"]').remove();
