@@ -29,93 +29,115 @@
     }
 
     $form.submit(function (event) {
-      Fliplet.Analytics.trackEvent('form', 'submit');
+      var errors;
+      $form.find('[required]').each(function () {
+        var $el = $(this);
+        if ( !$el.val().length ) {
+          errors = true;
+          $el.addClass('has-error');
+        }
+      });
 
-      event.preventDefault();
-      $formHtml.fadeOut(function () {
-        var fields = {};
-        var files = {};
-        var formData;
+      if ( !errors ) {
+        Fliplet.Analytics.trackEvent('form', 'submit');
 
-        $form.find('[name]').each(function () {
-          var $el = $(this);
-          var name = $el.attr('name');
-          var type = $el.attr('type');
+        event.preventDefault();
+        $formHtml.fadeOut(function () {
+          var fields = {};
+          var files = {};
+          var formData;
 
-          if (type === 'radio') {
-            if ($el.is(':checked')) {
+          $form.find('[name]').each(function () {
+            var $el = $(this);
+            var name = $el.attr('name');
+            var type = $el.attr('type');
+
+            if (type === 'radio') {
+              if ($el.is(':checked')) {
+                fields[name] = $el.val();
+              }
+            } else if (type === 'checkbox') {
+              if (!fields[name]) {
+                fields[name] = [];
+              }
+
+              if ($el.is(':checked')) {
+                fields[name].push($el.val());
+              }
+            } else if (type === 'file') {
+              files[name] = $el[0].files;
+            } else {
               fields[name] = $el.val();
             }
-          } else if (type === 'checkbox') {
-            if (!fields[name]) {
-              fields[name] = [];
-            }
-
-            if ($el.is(':checked')) {
-              fields[name].push($el.val());
-            }
-          } else if (type === 'file') {
-            files[name] = $el[0].files;
-          } else {
-            fields[name] = $el.val();
-          }
-        });
-
-        // Transform to FormData if files were posted
-        var fileNames = Object.keys(files);
-        if (fileNames.length) {
-          if (!Fliplet.Navigator.isOnline()) {
-            return alert('You must be connected to submit this form');
-          }
-
-          formData = new FormData();
-
-          fileNames.forEach(function (fileName) {
-            var fieldFiles = files[fileName];
-            var file;
-
-            for (var i = 0; i < fieldFiles.length; i++) {
-              file = fieldFiles.item(i);
-              formData.append(fileName, file);
-            }
           });
 
-          Object.keys(fields).forEach(function (fieldName) {
-            var value = fields[fieldName];
-            if (Array.isArray(value)) {
-              value.forEach(function (val) {
-                formData.append(fieldName + '[]', val);
-              });
-            } else {
-              formData.append(fieldName, value);
+          // Transform to FormData if files were posted
+          var fileNames = Object.keys(files);
+          if (fileNames.length) {
+            if (!Fliplet.Navigator.isOnline()) {
+              return alert('You must be connected to submit this form');
             }
-          });
-        }
 
-        formData = formData || fields;
+            formData = new FormData();
 
-        if (typeof formInstance.mapData === 'function') {
-          formData = formInstance.mapData(formData);
-        }
+            fileNames.forEach(function (fileName) {
+              var fieldFiles = files[fileName];
+              var file;
 
-        var options = {};
-        if (data.folderId) {
-          options.folderId = data.folderId;
-        }
+              for (var i = 0; i < fieldFiles.length; i++) {
+                file = fieldFiles.item(i);
+                formData.append(fileName, file);
+              }
+            });
 
-        getConnection().then(function (connection) {
-          if (dataSourceEntryId) {
-            return connection.update(dataSourceEntryId, formData, options);
+            Object.keys(fields).forEach(function (fieldName) {
+              var value = fields[fieldName];
+              if (Array.isArray(value)) {
+                value.forEach(function (val) {
+                  formData.append(fieldName + '[]', val);
+                });
+              } else {
+                formData.append(fieldName, value);
+              }
+            });
           }
 
-          return connection.insert(formData, options);
-        }).then(function onSaved() {
-          $formResult.fadeIn();
-          resetForm();
-        }, function onError(error) {
-          console.error(error);
+          formData = formData || fields;
+
+          if (typeof formInstance.mapData === 'function') {
+            formData = formInstance.mapData(formData);
+          }
+
+          var options = {};
+          if (data.folderId) {
+            options.folderId = data.folderId;
+          }
+
+          getConnection().then(function (connection) {
+            if (dataSourceEntryId) {
+              return connection.update(dataSourceEntryId, formData, options);
+            }
+
+            return connection.insert(formData, options);
+          }).then(function onSaved() {
+            $formResult.fadeIn();
+            resetForm();
+          }, function onError(error) {
+            console.error(error);
+          });
         });
-      });
+      } else {
+        if (Fliplet.Env.get('platform') === "native") {
+          navigator.notification.alert(
+            "You need to fill in the required fields",
+            function(){},
+            'Required fields',
+            'OK'
+          );
+        } else {
+          alert("Required fields\nYou need to fill in the required fields");
+        }
+      }
     });
 
     $form.on('click', '[data-start]', function (event) {
@@ -207,7 +229,7 @@
           return forms[uuid];
         });
       }
-    }
+    };
   });
 
 })();
