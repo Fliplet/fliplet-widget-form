@@ -92,6 +92,10 @@ a {
     box-shadow: none;
 }
 
+.form-control.has-error {
+    border: 1px solid #a94442;
+}
+
 input.form-control {
     -webkit-appearance: none;
 }
