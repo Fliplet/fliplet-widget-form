@@ -1,5 +1,6 @@
 (function () {
   var forms = {};
+  var globalEditModeEnabled = true;
 
   $('.fl-form').each(function () {
     var connection;
@@ -185,11 +186,18 @@
       }
     }
 
-    bindEditMode();
+    Fliplet.Navigator.onReady().then(function () {
+      if (globalEditModeEnabled) {
+        bindEditMode();
+      }
+    });
   });
 
   Fliplet.Widget.register('com.fliplet.form', function () {
     return {
+      disableAutoBindMode: function () {
+        globalEditModeEnabled = false;
+      },
       forms: function (uuid) {
         if (uuid) {
           return forms[uuid];
