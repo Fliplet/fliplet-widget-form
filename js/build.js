@@ -15,7 +15,8 @@
 
     var formInstance = {
       el: this,
-      data: data
+      data: data,
+      connection: connection
     };
 
     forms[uuid] = formInstance;
@@ -115,6 +116,10 @@
           }
 
           getConnection().then(function (connection) {
+            if (typeof formInstance.submit === 'function') {
+              return formInstance.submit(formData);
+            }
+
             if (dataSourceEntryId) {
               return connection.update(dataSourceEntryId, formData, options);
             }
