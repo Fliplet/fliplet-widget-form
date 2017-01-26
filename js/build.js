@@ -16,7 +16,8 @@
     var formInstance = {
       el: this,
       data: data,
-      connection: connection
+      connection: connection,
+      fillForm: fillForm
     };
 
     forms[uuid] = formInstance;
@@ -167,6 +168,34 @@
       bindEditMode();
     }
 
+    function fillForm(data) {
+      Object.keys(data).forEach(function (key) {
+        var value = data[key];
+        var $input = $form.find('[name="' + key + '"], [name="' + key + '[]"]');
+        var type = $input.attr('type');
+
+        if (Array.isArray(value)) {
+          value.forEach(function (val) {
+            $input.filter('[value="' + val + '"]')
+              .prop('checked', true)
+              .prop('selected', true);
+          });
+        } else {
+          if (!$input.length || type === 'file') {
+            $input = $('<input class="fl-data" type="hidden" name="' + key + '" />');
+            $input.val(value);
+            $form.prepend($input);
+          } else {
+            if (type === 'radio') {
+              $input.filter('[value="' + value + '"]').prop('checked', true);
+            } else {
+              $input.val(value);
+            }
+          }
+        }
+      });
+    }
+
     function bindEditMode() {
       if (editModeEnabled && Fliplet.Navigate.query.dataSourceId === data.dataSourceId) {
         getConnection().then(function (connection) {
@@ -175,31 +204,7 @@
         }).then(function (dataSourceEntry) {
           $form.find('input.fl-data[type="hidden"]').remove();
 
-          Object.keys(dataSourceEntry.data).forEach(function (key) {
-            var value = dataSourceEntry.data[key];
-            var $input = $form.find('[name="' + key + '"], [name="' + key + '[]"]');
-            var type = $input.attr('type');
-
-            if (Array.isArray(value)) {
-              value.forEach(function (val) {
-                $input.filter('[value="' + val + '"]')
-                  .prop('checked', true)
-                  .prop('selected', true);
-              });
-            } else {
-              if (!$input.length || type === 'file') {
-                $input = $('<input class="fl-data" type="hidden" name="' + key + '" />');
-                $input.val(value);
-                $form.prepend($input);
-              } else {
-                if (type === 'radio') {
-                  $input.filter('[value="' + value + '"]').prop('checked', true);
-                } else {
-                  $input.val(value);
-                }
-              }
-            }
-          });
+          fillForm(dataSourceEntry.data);
 
           var $submit = $form.find('[type="submit"]');
           var editLabel = $submit.data('edit-label');
