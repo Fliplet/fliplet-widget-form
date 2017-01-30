@@ -92,6 +92,10 @@ a {
     box-shadow: none;
 }
 
+.form-control.has-error {
+    border: 1px solid #a94442;
+}
+
 input.form-control {
     -webkit-appearance: none;
 }
@@ -366,13 +370,58 @@ textarea.form-control {
     box-shadow: none;
 }
 
-.rtgl-ios:checked + .rtgl-btn:active:after,
 .tgl-ios:checked + .tgl-btn:active:after {
     margin-left: -.8em;
 }
+/* START RATING */
+.star-rating {
+    overflow: hidden;
+    display: inline-block;
+    text-align: left;
+    direction: rtl;
+}
 
-.form-group .mce-btn-group {
-    float: none;
+.star-rating .rating-input {
+    display: inline-block;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    margin: 0 0 0 -30px;
+    opacity: 0;
+}
+
+.star-rating .rating-star {
+    position: relative;
+    display: inline-block;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    cursor: pointer;
+}
+
+.star-rating .rating-star .fa {
+    font-size: 30px;
+    color: #337ab7;
+}
+
+.directory-list li.active .star-rating .rating-star .fa {
+    color: #fff;
+}
+
+.star-rating .rating-star .fa.fa-star-o {
+    display: block;
+}
+
+.star-rating .rating-star .fa.fa-star {
+    display: none;
+}
+
+.star-rating .rating-input:checked ~ .rating-star .fa.fa-star-o {
+    display: none;
+}
+
+.star-rating .rating-input:checked ~ .rating-star .fa.fa-star {
+    display: block;
 }
 /* @MEDIA */
 @media screen and (min-width: 640px) {
@@ -396,6 +445,10 @@ textarea.form-control {
     .form-horizontal .btn + .btn {
         margin-right: 15px;
     }
+}
+
+.form-group .mce-btn-group {
+  float: none;
 }
 
 .mce-window[aria-label="Source code"] textarea {
