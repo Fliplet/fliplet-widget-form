@@ -397,3 +397,7 @@ textarea.form-control {
         margin-right: 15px;
     }
 }
+
+.mce-window[aria-label="Source code"] textarea {
+  font-family: monospace;
+}

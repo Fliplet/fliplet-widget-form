@@ -26,7 +26,7 @@
       return connection;
     }
 
-    $form.submit(function (event) {
+    $form.submit(function saveForm (event) {
       Fliplet.Analytics.trackEvent('form', 'submit');
 
       event.preventDefault();
@@ -54,6 +54,8 @@
             }
           } else if (type === 'file') {
             files[name] = $el[0].files;
+          } else if ($el.is('[data-tinymce]')) {
+            fields[name] = tinyMCE.get(name).getContent();
           } else {
             fields[name] = $el.val();
           }
@@ -155,6 +157,8 @@
               } else {
                 if (type === 'radio') {
                   $input.filter('[value="' + value + '"]').prop('checked', true);
+                } else if ($input.is('[data-tinymce]') && tinyMCE.get(key)) {
+                  tinyMCE.get(key).setContent(value);
                 } else {
                   $input.val(value);
                 }
@@ -179,14 +183,19 @@
       selector: 'textarea[data-tinymce]',
       theme: 'modern',
       plugins: [
-        'advlist lists image charmap hr',
-        'searchreplace insertdatetime table textcolor colorpicker'
+        'advlist autolink lists link image charmap hr',
+        'searchreplace insertdatetime table textcolor colorpicker',
+        'autoresize fullscreen code emoticons paste textcolor colorpicker imagetools'
       ],
-      toolbar: 'formatselect | fontselect fontsizeselect | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | blockquote subscript superscript | table charmap hr | removeformat',
+      toolbar: 'undo redo | formatselect | fontselect fontsizeselect | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image | blockquote subscript superscript | table charmap hr | forecolor backcolor emoticons | removeformat code fullscreen',
+      imageadvtab: true,
       menubar: false,
       statusbar: true,
       inline: false,
-      resize: true
+      resize: true,
+      autoresize_bottom_margin: 50,
+      autoresize_max_height: 500,
+      autoresize_min_height: 250
     });
 
     bindEditMode();
