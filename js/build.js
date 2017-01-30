@@ -190,7 +190,7 @@
           } else {
             if (type === 'radio') {
               $input.filter('[value="' + value + '"]').prop('checked', true);
-            } else if ($input.is('[data-tinymce]') && tinyMCE.get(key)) {
+            } else if ($input.is('[data-tinymce]') && tinyMCE.get(key).getDoc()) {
               tinyMCE.get(key).setContent(value);
             } else {
               $input.val(value);
