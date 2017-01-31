@@ -31,6 +31,7 @@
     }
 
     $form.submit(function (event) {
+      event.preventDefault();
       var errors = false;
       $form.find('[required]').each(function () {
         var $el = $(this);
@@ -42,8 +43,6 @@
 
       if (!errors) {
         Fliplet.Analytics.trackEvent('form', 'submit');
-
-        event.preventDefault();
         
         $formHtml.fadeOut(function () {
           var fields = {};
