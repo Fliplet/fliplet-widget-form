@@ -22,7 +22,9 @@
       data: data,
       connection: connection,
       fillForm: fillForm,
-      onSubmit: submitPromise
+      onSubmit: function () {
+        return submitPromise;
+      }
     };
 
     forms[uuid] = formInstance;
