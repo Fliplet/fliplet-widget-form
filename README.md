@@ -29,3 +29,13 @@ formInstance.submit = function(data) {
   return Promise.resolve();
 }
 ```
+
+### Post-submission hooks
+
+Whether you are using the default submission process or your own, you can have an event listener for when submissions are successful.
+
+```js
+formInstance.onSubmit().then(function(){
+  // Submission was a huge success. Celebrate.
+});
+```
