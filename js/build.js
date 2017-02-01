@@ -43,7 +43,7 @@
 
       if (!errors) {
         Fliplet.Analytics.trackEvent('form', 'submit');
-        
+
         $formHtml.fadeOut(function () {
           var fields = {};
           var files = {};
@@ -201,6 +201,10 @@
           dataSourceEntryId = parseInt(Fliplet.Navigate.query.dataSourceEntryId);
           return connection.findById(dataSourceEntryId);
         }).then(function (dataSourceEntry) {
+          if (!dataSourceEntry) {
+            return;
+          }
+
           $form.find('input.fl-data[type="hidden"]').remove();
 
           fillForm(dataSourceEntry.data);
