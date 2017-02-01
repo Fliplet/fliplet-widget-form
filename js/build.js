@@ -12,12 +12,17 @@
     var editModeEnabled = true;
     var dataSourceId;
     var dataSourceEntryId;
+    var submitPromiseResolve;
+    var submitPromise = new Promise(function(resolve, reject){
+      submitPromiseResolve = resolve;
+    });
 
     var formInstance = {
       el: this,
       data: data,
       connection: connection,
-      fillForm: fillForm
+      fillForm: fillForm,
+      onSubmit: submitPromise
     };
 
     forms[uuid] = formInstance;
@@ -127,6 +132,7 @@
             return connection.insert(formData, options);
           }).then(function onSaved() {
             $formResult.fadeIn();
+            submitPromiseResolve();
             resetForm();
           }, function onError(error) {
             console.error(error);
