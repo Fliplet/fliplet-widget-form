@@ -185,6 +185,11 @@
             $input.val(value);
             $form.prepend($input);
           } else {
+            if (type === 'password') {
+              // Never fill in password fields
+              return;
+            }
+
             if (type === 'radio') {
               $input.filter('[value="' + value + '"]').prop('checked', true);
             } else {
