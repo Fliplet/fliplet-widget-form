@@ -12,12 +12,19 @@
     var editModeEnabled = true;
     var dataSourceId;
     var dataSourceEntryId;
+    var submitPromiseResolve;
+    var submitPromise = new Promise(function(resolve, reject){
+      submitPromiseResolve = resolve;
+    });
 
     var formInstance = {
       el: this,
       data: data,
       connection: connection,
-      fillForm: fillForm
+      fillForm: fillForm,
+      onSubmit: function () {
+        return submitPromise;
+      }
     };
 
     forms[uuid] = formInstance;
@@ -31,6 +38,7 @@
     }
 
     $form.submit(function (event) {
+      event.preventDefault();
       var errors = false;
       $form.find('[required]').each(function () {
         var $el = $(this);
@@ -42,8 +50,6 @@
 
       if (!errors) {
         Fliplet.Analytics.trackEvent('form', 'submit');
-
-        event.preventDefault();
 
         $formHtml.fadeOut(function () {
           var fields = {};
@@ -75,6 +81,14 @@
               fields[name] = $el.val();
             }
           });
+
+          if (typeof formInstance.mapData === 'function') {
+            try {
+              fields = formInstance.mapData(fields);
+            } catch (e) {
+              console.error(e);
+            }
+          }
 
           // Transform to FormData if files were posted
           var fileNames = Object.keys(files);
@@ -109,10 +123,6 @@
 
           formData = formData || fields;
 
-          if (typeof formInstance.mapData === 'function') {
-            formData = formInstance.mapData(formData);
-          }
-
           var options = {};
           if (data.folderId) {
             options.folderId = data.folderId;
@@ -130,6 +140,7 @@
             return connection.insert(formData, options);
           }).then(function onSaved() {
             $formResult.fadeIn();
+            submitPromiseResolve();
             resetForm();
           }, function onError(error) {
             console.error(error);
@@ -188,6 +199,11 @@
             $input.val(value);
             $form.prepend($input);
           } else {
+            if (type === 'password') {
+              // Never fill in password fields
+              return;
+            }
+
             if (type === 'radio') {
               $input.filter('[value="' + value + '"]').prop('checked', true);
             } else if ($input.is('[data-tinymce]') && tinyMCE.get(key).getDoc()) {
@@ -206,6 +222,10 @@
           dataSourceEntryId = parseInt(Fliplet.Navigate.query.dataSourceEntryId);
           return connection.findById(dataSourceEntryId);
         }).then(function (dataSourceEntry) {
+          if (!dataSourceEntry) {
+            return;
+          }
+
           $form.find('input.fl-data[type="hidden"]').remove();
 
           fillForm(dataSourceEntry.data);
