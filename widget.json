@@ -28,6 +28,7 @@
       "bootstrap",
       "fliplet-core",
       "fliplet-datasources",
+      "fliplet-media",
       "tinymce"
     ],
     "assets": [
