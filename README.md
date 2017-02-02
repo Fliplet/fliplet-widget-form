@@ -10,12 +10,15 @@ var formInstance = Fliplet.Widget.get('com.fliplet.form').forms(UUID);
 
 ## Dev Options
 
-### Map data before sent
+### Map form data before sent
+
+Note formData is a `FormData` type object and has specific `.has()`, `.get()` and `.set()` methods. See https://developer.mozilla.org/en-US/docs/Web/API/FormData
 
 ```js
-formInstance.mapData = function(data) {
-  // Do whatever to data
-  return data;
+formInstance.mapData = function(formData) {
+  // formData @FormData
+  // See https://developer.mozilla.org/en-US/docs/Web/API/FormData
+  return formData;
 }
 ```
 
