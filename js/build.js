@@ -243,24 +243,27 @@
       }
     }
 
-    tinymce.init({
-      selector: 'textarea[data-tinymce]',
-      theme: 'modern',
-      plugins: [
-        'advlist autolink lists link image charmap hr',
-        'searchreplace insertdatetime table textcolor colorpicker',
-        'autoresize fullscreen code emoticons paste textcolor colorpicker imagetools'
-      ],
-      toolbar: 'undo redo | formatselect | fontselect fontsizeselect | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image | blockquote subscript superscript | table charmap hr | forecolor backcolor emoticons | removeformat code fullscreen',
-      image_advtab: true,
-      menubar: false,
-      statusbar: true,
-      inline: false,
-      resize: true,
-      autoresize_bottom_margin: 50,
-      autoresize_max_height: 500,
-      autoresize_min_height: 250
-    });
+    if ($('textarea[data-tinymce]').length) {
+      tinymce.init({
+        selector: 'textarea[data-tinymce]',
+        theme: 'modern',
+        plugins: [
+          'advlist autolink lists link image charmap hr ',
+          'searchreplace insertdatetime table textcolor colorpicker',
+          'autoresize fullscreen code emoticons paste textcolor colorpicker imagetools'
+        ],
+        toolbar: 'undo redo | formatselect | fontselect fontsizeselect | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image | blockquote subscript superscript | table charmap hr | forecolor backcolor emoticons | removeformat code fullscreen',
+        image_advtab: true,
+        menubar: false,
+        statusbar: true,
+        inline: false,
+        resize: true,
+        autoresize_bottom_margin: 50,
+        autoresize_max_height: 500,
+        autoresize_min_height: 250
+      });
+    }
+
 
     Fliplet.Navigator.onReady().then(function () {
       if (globalEditModeEnabled) {
