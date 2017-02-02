@@ -243,16 +243,19 @@
       }
     }
 
-    if ($('textarea[data-tinymce]').length) {
+    if ($('textarea[data-tinymce]').length && tinymce) {
       tinymce.init({
         selector: 'textarea[data-tinymce]',
         theme: 'modern',
         plugins: [
           'advlist autolink lists link image charmap hr ',
           'searchreplace insertdatetime table textcolor colorpicker',
-          'autoresize fullscreen code emoticons paste textcolor colorpicker imagetools'
+          'autoresize fullscreen code emoticons paste textcolor colorpicker imagetools flipletinsertimage'
         ],
-        toolbar: 'undo redo | formatselect | fontselect fontsizeselect | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image | blockquote subscript superscript | table charmap hr | forecolor backcolor emoticons | removeformat code fullscreen',
+        external_plugins: {
+          'flipletinsertimage': Fliplet.Env.get('apiUrl') + 'assets/fliplet-tinymce-plugins/1.0/image-upload.js'
+        },
+        toolbar: 'undo redo | formatselect | fontselect fontsizeselect | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image | blockquote subscript superscript | table charmap hr | forecolor backcolor emoticons | removeformat code fullscreen | flipletinsertimage',
         image_advtab: true,
         menubar: false,
         statusbar: true,
