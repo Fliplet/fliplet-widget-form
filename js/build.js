@@ -80,7 +80,7 @@
               }
             } else if (type === 'file') {
               files[name] = $el[0].files;
-            } else if ($el.is('[data-tinymce]')) {
+            } else if ($el.is('[data-tinymce]') && typeof tinyMCE !== 'undefined') {
               files[name] = tinyMCE.get(name).getContent();
             } else {
               fields[name] = $el.val();
@@ -211,7 +211,9 @@
 
             if (type === 'radio') {
               $input.filter('[value="' + value + '"]').prop('checked', true);
-            } else if ($input.is('[data-tinymce]') && tinyMCE.get(key).getDoc()) {
+            } else if ($input.is('[data-tinymce]')
+              && typeof tinyMCE !== 'undefined'
+              && tinyMCE.get(key).getDoc()) {
               tinyMCE.get(key).setContent(value);
             } else {
               $input.val(value);
