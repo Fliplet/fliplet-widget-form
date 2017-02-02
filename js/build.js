@@ -80,6 +80,14 @@
             }
           });
 
+          if (typeof formInstance.mapData === 'function') {
+            try {
+              fields = formInstance.mapData(fields);
+            } catch (e) {
+              console.error(e);
+            }
+          }
+
           // Transform to FormData if files were posted
           var fileNames = Object.keys(files);
           if (fileNames.length) {
@@ -112,14 +120,6 @@
           }
 
           formData = formData || fields;
-
-          if (typeof formInstance.mapData === 'function') {
-            try {
-              formData = formInstance.mapData(formData);
-            } catch (e) {
-              console.error(e);
-            }
-          }
 
           var options = {};
           if (data.folderId) {
