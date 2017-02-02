@@ -114,7 +114,11 @@
           formData = formData || fields;
 
           if (typeof formInstance.mapData === 'function') {
-            formData = formInstance.mapData(formData);
+            try {
+              formData = formInstance.mapData(formData);
+            } catch (e) {
+              console.error(e);
+            }
           }
 
           var options = {};
