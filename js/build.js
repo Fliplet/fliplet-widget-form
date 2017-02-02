@@ -24,6 +24,11 @@
       fillForm: fillForm,
       onSubmit: function () {
         return submitPromise;
+      },
+      onBeforeTinyMCEInit: function () {
+        // Resolves immediate, unless onBeforeTinyMCEInit is replaced
+        // with another Promise that resolves with an options object
+        return Promise.resolve();
       }
     };
 
@@ -243,32 +248,44 @@
       }
     }
 
-    if ($('textarea[data-tinymce]').length && tinymce) {
-      tinymce.init({
-        selector: 'textarea[data-tinymce]',
-        theme: 'modern',
-        plugins: [
-          'advlist autolink lists link image charmap hr ',
+    function initialiseTinyMCE () {
+      if ($('textarea[data-tinymce]').length && typeof tinymce !== 'undefined') {
+        var tinymcePlugins = [
+          'advlist autolink lists link image charmap hr',
           'searchreplace insertdatetime table textcolor colorpicker',
-          'autoresize fullscreen code emoticons paste textcolor colorpicker imagetools flipletinsertimage'
-        ],
-        external_plugins: {
-          'flipletinsertimage': Fliplet.Env.get('apiUrl') + 'assets/fliplet-tinymce-plugins/1.0/image-upload.js'
-        },
-        toolbar: 'undo redo | formatselect | fontselect fontsizeselect | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image | blockquote subscript superscript | table charmap hr | forecolor backcolor emoticons | removeformat code fullscreen | flipletinsertimage',
-        image_advtab: true,
-        menubar: false,
-        statusbar: true,
-        inline: false,
-        resize: true,
-        autoresize_bottom_margin: 50,
-        autoresize_max_height: 500,
-        autoresize_min_height: 250
-      });
+          'autoresize fullscreen code emoticons paste textcolor colorpicker imagetools'
+        ];
+        var tinymceToolbar = 'undo redo | formatselect | fontselect fontsizeselect | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image | blockquote subscript superscript | table charmap hr | forecolor backcolor emoticons | removeformat code fullscreen';
+
+        formInstance.onBeforeTinyMCEInit().then(function (opts) {
+          // opts @Object Custom TinyMCE options
+          opts = opts || {};
+          if (opts.hasOwnProperty('plugins')) {
+            tinymcePlugins.push(opts.plugins);
+          }
+          if (opts.hasOwnProperty('toolbar')) {
+            tinymceToolbar = tinymceToolbar + ' | ' + opts.toolbar;
+          }
+          tinymce.init({
+            selector: 'textarea[data-tinymce]',
+            theme: 'modern',
+            plugins: tinymcePlugins.join(' '),
+            toolbar: tinymceToolbar,
+            image_advtab: true,
+            menubar: false,
+            statusbar: true,
+            inline: false,
+            resize: true,
+            autoresize_bottom_margin: 50,
+            autoresize_max_height: 500,
+            autoresize_min_height: 250
+          });
+        });
+      }
     }
 
-
     Fliplet.Navigator.onReady().then(function () {
+      initialiseTinyMCE();
       if (globalEditModeEnabled) {
         bindEditMode();
       }
