@@ -66,25 +66,31 @@
             var name = $el.attr('name');
             var type = $el.attr('type');
 
+            if (type === 'file') {
+              return files[name] = $el[0].files;
+            }
             if (type === 'radio') {
               if ($el.is(':checked')) {
-                fields[name] = $el.val();
+                return fields[name] = $el.val();
               }
-            } else if (type === 'checkbox') {
+            }
+            if (type === 'checkbox') {
               if (!fields[name]) {
                 fields[name] = [];
               }
 
               if ($el.is(':checked')) {
-                fields[name].push($el.val());
+                return fields[name].push($el.val());
               }
-            } else if (type === 'file') {
-              files[name] = $el[0].files;
-            } else if ($el.is('[data-tinymce]') && typeof tinyMCE !== 'undefined') {
-              files[name] = tinyMCE.get(name).getContent();
-            } else {
-              fields[name] = $el.val();
             }
+            if ($el.is('[data-tinymce]') && typeof tinyMCE !== 'undefined') {
+              var tinymceKey = name;
+              if ($el.attr('id')) {
+                tinymceKey = $el.attr('id');
+              }
+              return fields[name] = tinyMCE.get(tinymceKey).getContent();
+            }
+            fields[name] = $el.val();
           });
 
           if (typeof formInstance.mapData === 'function') {
@@ -210,14 +216,17 @@
             }
 
             if (type === 'radio') {
-              $input.filter('[value="' + value + '"]').prop('checked', true);
-            } else if ($input.is('[data-tinymce]')
-              && typeof tinyMCE !== 'undefined'
-              && tinyMCE.get(key).getDoc()) {
-              tinyMCE.get(key).setContent(value);
-            } else {
-              $input.val(value);
+              return $input.filter('[value="' + value + '"]').prop('checked', true);
+            } else if ($input.is('[data-tinymce]') && typeof tinyMCE !== 'undefined') {
+              var tinymceKey = key;
+              if ($input.attr('id')) {
+                tinymceKey = $input.attr('id');
+              }
+              if (tinyMCE.get(tinymceKey).getDoc()) {
+                return tinyMCE.get(tinymceKey).setContent(value);
+              }
             }
+            $input.val(value);
           }
         }
       });
