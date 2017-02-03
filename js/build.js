@@ -67,9 +67,11 @@
           if ($el.attr('id')) {
             tinymceKey = $el.attr('id');
           }
-          if (tinyMCE.get(tinymceKey) && tinyMCE.get(tinymceKey).getDoc() && !tinyMCE.get(tinymceKey).getContent().length) {
-            errors = true;
-            $el.addClass('has-error');
+          if (tinyMCE.get(tinymceKey) && tinyMCE.get(tinymceKey).getDoc()) {
+            if (!tinyMCE.get(tinymceKey).getContent().length) {
+              errors = true;
+              $el.addClass('has-error');
+            }
             return;
           }
         }
