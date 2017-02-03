@@ -50,15 +50,15 @@
         var name = $el.attr('name');
         var type = $el.attr('type');
 
-        if (type === 'radio' && !$form.find(`[name="${name}"]:checked`).length) {
+          if (type === 'radio' && !$form.find('[name="'+name+'"]:checked').length) {
           errors = true;
-          $form.find(`[name="${name}"]`).parents('.radio').addClass('has-error');
+          $form.find('[name="'+name+'"]').parents('.radio').addClass('has-error');
           return;
         }
 
         if (type === 'checkbox' && !$el.is(':checked')) {
           errors = true;
-          $form.find(`[name="${name}"]`).parents('.checkbox').addClass('has-error');
+          $form.find('[name="'+name+'"]').parents('.checkbox').addClass('has-error');
           return;
         }
 
