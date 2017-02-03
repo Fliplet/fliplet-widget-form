@@ -53,7 +53,20 @@
         }
       });
 
-      if (!errors) {
+      if (errors) {
+        if (Fliplet.Env.get('platform') === "native") {
+          navigator.notification.alert(
+            "You need to fill in the required fields",
+            function(){},
+            'Required fields',
+            'OK'
+          );
+        } else {
+          alert("Required fields\nYou need to fill in the required fields");
+        }
+        return;
+      }
+
         Fliplet.Analytics.trackEvent('form', 'submit');
 
         $formHtml.fadeOut(function () {
@@ -157,18 +170,6 @@
             console.error(error);
           });
         });
-      } else {
-        if (Fliplet.Env.get('platform') === "native") {
-          navigator.notification.alert(
-            "You need to fill in the required fields",
-            function(){},
-            'Required fields',
-            'OK'
-          );
-        } else {
-          alert("Required fields\nYou need to fill in the required fields");
-        }
-      }
     });
 
     $form.on('click', '[data-start]', function (event) {
