@@ -84,16 +84,10 @@
       });
 
       if (errors) {
-        if (Fliplet.Env.get('platform') === "native") {
-          navigator.notification.alert(
-            "You need to fill in the required fields",
-            function(){},
-            'Required fields',
-            'OK'
-          );
-        } else {
-          alert("Required fields\nYou need to fill in the required fields");
-        }
+        Fliplet.Navigate.popup({
+          popupTitle: 'Required fields',
+          popupMessage: 'You need to fill in the required fields'
+        });
         return;
       }
 
