@@ -47,9 +47,37 @@
       var errors = false;
       $form.find('[required]').each(function () {
         var $el = $(this);
-        if ( !$el.val().length ) {
+        var name = $el.attr('name');
+        var type = $el.attr('type');
+
+        if (type === 'radio' && !$form.find(`[name="${name}"]:checked`).length) {
+          errors = true;
+          $form.find(`[name="${name}"]`).parents('.radio').addClass('has-error');
+          return;
+        }
+
+        if (type === 'checkbox' && !$el.is(':checked')) {
+          errors = true;
+          $form.find(`[name="${name}"]`).parents('.checkbox').addClass('has-error');
+          return;
+        }
+
+        if ($el.is('[data-tinymce]') && typeof tinyMCE !== 'undefined') {
+          var tinymceKey = name;
+          if ($el.attr('id')) {
+            tinymceKey = $el.attr('id');
+          }
+          if (tinyMCE.get(tinymceKey) && tinyMCE.get(tinymceKey).getDoc() && !tinyMCE.get(tinymceKey).getContent().length) {
+            errors = true;
+            $el.addClass('has-error');
+            return;
+          }
+        }
+
+        if (!$el.val().length) {
           errors = true;
           $el.addClass('has-error');
+          return;
         }
       });
 
