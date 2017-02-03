@@ -290,7 +290,7 @@
           'searchreplace insertdatetime table textcolor colorpicker',
           'autoresize fullscreen code emoticons paste textcolor colorpicker imagetools'
         ];
-        var tinymceToolbar = 'undo redo | formatselect | fontselect fontsizeselect | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image | blockquote subscript superscript | table charmap hr | forecolor backcolor emoticons | removeformat code fullscreen';
+        var tinymceToolbar = 'undo redo | formatselect | fontsizeselect | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image | blockquote subscript superscript | table charmap hr | forecolor backcolor | removeformat code fullscreen';
 
         formInstance.onBeforeTinyMCEInit().then(function (opts) {
           // opts @Object Custom TinyMCE options
