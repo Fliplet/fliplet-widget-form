@@ -24,6 +24,11 @@
       fillForm: fillForm,
       onSubmit: function () {
         return submitPromise;
+      },
+      onBeforeTinyMCEInit: function () {
+        // Resolves immediate, unless onBeforeTinyMCEInit is replaced
+        // with another Promise that resolves with an options object
+        return Promise.resolve();
       }
     };
 
@@ -42,13 +47,49 @@
       var errors = false;
       $form.find('[required]').each(function () {
         var $el = $(this);
-        if ( !$el.val().length ) {
+        var name = $el.attr('name');
+        var type = $el.attr('type');
+
+          if (type === 'radio' && !$form.find('[name="'+name+'"]:checked').length) {
+          errors = true;
+          $form.find('[name="'+name+'"]').parents('.radio').addClass('has-error');
+          return;
+        }
+
+        if (type === 'checkbox' && !$el.is(':checked')) {
+          errors = true;
+          $form.find('[name="'+name+'"]').parents('.checkbox').addClass('has-error');
+          return;
+        }
+
+        if ($el.is('[data-tinymce]') && typeof tinyMCE !== 'undefined') {
+          var tinymceKey = name;
+          if ($el.attr('id')) {
+            tinymceKey = $el.attr('id');
+          }
+          if (tinyMCE.get(tinymceKey) && tinyMCE.get(tinymceKey).getDoc()) {
+            if (!tinyMCE.get(tinymceKey).getContent().length) {
+              errors = true;
+              $el.addClass('has-error');
+            }
+            return;
+          }
+        }
+
+        if (!$el.val().length) {
           errors = true;
           $el.addClass('has-error');
+          return;
         }
       });
 
-      if (!errors) {
+      if (errors) {
+        return Fliplet.Navigate.popup({
+          popupTitle: 'Required fields',
+          popupMessage: 'You need to fill in the required fields'
+        });
+      }
+
         Fliplet.Analytics.trackEvent('form', 'submit');
 
         $formHtml.fadeOut(function () {
@@ -61,23 +102,31 @@
             var name = $el.attr('name');
             var type = $el.attr('type');
 
+            if (type === 'file') {
+              return files[name] = $el[0].files;
+            }
             if (type === 'radio') {
               if ($el.is(':checked')) {
-                fields[name] = $el.val();
+                return fields[name] = $el.val();
               }
-            } else if (type === 'checkbox') {
+            }
+            if (type === 'checkbox') {
               if (!fields[name]) {
                 fields[name] = [];
               }
 
               if ($el.is(':checked')) {
-                fields[name].push($el.val());
+                return fields[name].push($el.val());
               }
-            } else if (type === 'file') {
-              files[name] = $el[0].files;
-            } else {
-              fields[name] = $el.val();
             }
+            if ($el.is('[data-tinymce]') && typeof tinyMCE !== 'undefined') {
+              var tinymceKey = name;
+              if ($el.attr('id')) {
+                tinymceKey = $el.attr('id');
+              }
+              return fields[name] = tinyMCE.get(tinymceKey).getContent();
+            }
+            fields[name] = $el.val();
           });
 
           if (typeof formInstance.mapData === 'function') {
@@ -144,18 +193,6 @@
             console.error(error);
           });
         });
-      } else {
-        if (Fliplet.Env.get('platform') === "native") {
-          navigator.notification.alert(
-            "You need to fill in the required fields",
-            function(){},
-            'Required fields',
-            'OK'
-          );
-        } else {
-          alert("Required fields\nYou need to fill in the required fields");
-        }
-      }
     });
 
     $form.on('click', '[data-start]', function (event) {
@@ -203,10 +240,17 @@
             }
 
             if (type === 'radio') {
-              $input.filter('[value="' + value + '"]').prop('checked', true);
-            } else {
-              $input.val(value);
+              return $input.filter('[value="' + value + '"]').prop('checked', true);
+            } else if ($input.is('[data-tinymce]') && typeof tinyMCE !== 'undefined') {
+              var tinymceKey = key;
+              if ($input.attr('id')) {
+                tinymceKey = $input.attr('id');
+              }
+              if (tinyMCE.get(tinymceKey).getDoc()) {
+                return tinyMCE.get(tinymceKey).setContent(value);
+              }
             }
+            $input.val(value);
           }
         }
       });
@@ -239,7 +283,44 @@
       }
     }
 
+    function initialiseTinyMCE () {
+      if ($('textarea[data-tinymce]').length && typeof tinymce !== 'undefined') {
+        var tinymcePlugins = [
+          'advlist autolink lists link image charmap hr',
+          'searchreplace insertdatetime table textcolor colorpicker',
+          'autoresize fullscreen code emoticons paste textcolor colorpicker imagetools'
+        ];
+        var tinymceToolbar = 'undo redo | formatselect | fontselect fontsizeselect | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image | blockquote subscript superscript | table charmap hr | forecolor backcolor emoticons | removeformat code fullscreen';
+
+        formInstance.onBeforeTinyMCEInit().then(function (opts) {
+          // opts @Object Custom TinyMCE options
+          opts = opts || {};
+          if (opts.hasOwnProperty('plugins')) {
+            tinymcePlugins.push(opts.plugins);
+          }
+          if (opts.hasOwnProperty('toolbar')) {
+            tinymceToolbar = tinymceToolbar + ' | ' + opts.toolbar;
+          }
+          tinymce.init({
+            selector: 'textarea[data-tinymce]',
+            theme: 'modern',
+            plugins: tinymcePlugins.join(' '),
+            toolbar: tinymceToolbar,
+            image_advtab: true,
+            menubar: false,
+            statusbar: true,
+            inline: false,
+            resize: true,
+            autoresize_bottom_margin: 50,
+            autoresize_max_height: 500,
+            autoresize_min_height: 250
+          });
+        });
+      }
+    }
+
     Fliplet.Navigator.onReady().then(function () {
+      initialiseTinyMCE();
       if (globalEditModeEnabled) {
         bindEditMode();
       }

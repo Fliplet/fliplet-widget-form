@@ -446,3 +446,11 @@ textarea.form-control {
         margin-right: 15px;
     }
 }
+
+.form-group .mce-btn-group {
+  float: none;
+}
+
+.mce-window[aria-label="Source code"] textarea {
+  font-family: monospace;
+}
