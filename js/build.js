@@ -84,11 +84,10 @@
       });
 
       if (errors) {
-        Fliplet.Navigate.popup({
+        return Fliplet.Navigate.popup({
           popupTitle: 'Required fields',
           popupMessage: 'You need to fill in the required fields'
         });
-        return;
       }
 
         Fliplet.Analytics.trackEvent('form', 'submit');
