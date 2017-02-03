@@ -36,7 +36,7 @@
 
     function getConnection() {
       if (!connection) {
-        connection = Fliplet.DataSources.connect(data.dataSourceId);
+        connection = Fliplet.DataSources.connect(data.dataSourceId, { offline: false });
       }
 
       return connection;
