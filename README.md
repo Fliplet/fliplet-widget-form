@@ -41,3 +41,19 @@ formInstance.onSubmit().then(function(){
   // Submission was a huge success. Celebrate.
 });
 ```
+
+### TinyMCE and customisation
+
+Add a `<textarea data-tinymce></textarea>` field with the `data-tinymce` attribute to create a textarea that supports full formatting support.
+
+You can also add new TinyMCE or custom plugins by creating a custom `formInstance.onBeforeTinyMCEInit()` promise. `tinymce` must be added to the page dependency for this to work.
+
+```js
+formInstance.onBeforeTinyMCEInit() = function () {
+  var opts = {
+    plugins: 'mycustomplugin',
+    toolbar: 'mycustomplugin'
+  };
+  return Promise.resolve(opts);
+}
+```
