@@ -42,22 +42,21 @@
       return connection;
     }
 
-    $form.submit(function (event) {
-      event.preventDefault();
-      var errors = false;
+    function validateForm() {
+      var formIsValid = true;
       $form.find('[required]').each(function () {
         var $el = $(this);
         var name = $el.attr('name');
         var type = $el.attr('type');
 
         if (type === 'radio' && !$form.find('[name="'+name+'"]:checked').length) {
-          errors = true;
+          formIsValid = false;
           $form.find('[name="'+name+'"]').parents('.radio').addClass('has-error');
           return;
         }
 
         if (type === 'checkbox' && !$el.is(':checked')) {
-          errors = true;
+          formIsValid = false;
           $form.find('[name="'+name+'"]').parents('.checkbox').addClass('has-error');
           return;
         }
@@ -69,7 +68,7 @@
           }
           if (tinyMCE.get(tinymceKey) && tinyMCE.get(tinymceKey).getDoc()) {
             if (!tinyMCE.get(tinymceKey).getContent().length) {
-              errors = true;
+              formIsValid = false;
               $el.addClass('has-error');
             }
             return;
@@ -77,13 +76,18 @@
         }
 
         if (!$el.val().length) {
-          errors = true;
+          formIsValid = false;
           $el.addClass('has-error');
           return;
         }
       });
+      return formIsValid;
+    }
 
-      if (errors) {
+    $form.submit(function (event) {
+      event.preventDefault();
+
+      if (!validateForm()) {
         return Fliplet.Navigate.popup({
           popupTitle: 'Required fields',
           popupMessage: 'You need to fill in the required fields'
