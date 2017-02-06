@@ -50,7 +50,7 @@
         var name = $el.attr('name');
         var type = $el.attr('type');
 
-          if (type === 'radio' && !$form.find('[name="'+name+'"]:checked').length) {
+        if (type === 'radio' && !$form.find('[name="'+name+'"]:checked').length) {
           errors = true;
           $form.find('[name="'+name+'"]').parents('.radio').addClass('has-error');
           return;
@@ -90,109 +90,109 @@
         });
       }
 
-        Fliplet.Analytics.trackEvent('form', 'submit');
+      Fliplet.Analytics.trackEvent('form', 'submit');
 
-        $formHtml.fadeOut(function () {
-          var fields = {};
-          var files = {};
-          var formData;
+      $formHtml.fadeOut(function () {
+        var fields = {};
+        var files = {};
+        var formData;
 
-          $form.find('[name]').each(function () {
-            var $el = $(this);
-            var name = $el.attr('name');
-            var type = $el.attr('type');
+        $form.find('[name]').each(function () {
+          var $el = $(this);
+          var name = $el.attr('name');
+          var type = $el.attr('type');
 
-            if (type === 'file') {
-              return files[name] = $el[0].files;
-            }
-            if (type === 'radio') {
-              if ($el.is(':checked')) {
-                return fields[name] = $el.val();
-              }
-            }
-            if (type === 'checkbox') {
-              if (!fields[name]) {
-                fields[name] = [];
-              }
-
-              if ($el.is(':checked')) {
-                return fields[name].push($el.val());
-              }
-            }
-            if ($el.is('[data-tinymce]') && typeof tinyMCE !== 'undefined') {
-              var tinymceKey = name;
-              if ($el.attr('id')) {
-                tinymceKey = $el.attr('id');
-              }
-              return fields[name] = tinyMCE.get(tinymceKey).getContent();
-            }
-            fields[name] = $el.val();
-          });
-
-          if (typeof formInstance.mapData === 'function') {
-            try {
-              fields = formInstance.mapData(fields);
-            } catch (e) {
-              console.error(e);
+          if (type === 'file') {
+            return files[name] = $el[0].files;
+          }
+          if (type === 'radio') {
+            if ($el.is(':checked')) {
+              return fields[name] = $el.val();
             }
           }
-
-          // Transform to FormData if files were posted
-          var fileNames = Object.keys(files);
-          if (fileNames.length) {
-            if (!Fliplet.Navigator.isOnline()) {
-              return alert('You must be connected to submit this form');
+          if (type === 'checkbox') {
+            if (!fields[name]) {
+              fields[name] = [];
             }
 
-            formData = new FormData();
-
-            fileNames.forEach(function (fileName) {
-              var fieldFiles = files[fileName];
-              var file;
-
-              for (var i = 0; i < fieldFiles.length; i++) {
-                file = fieldFiles.item(i);
-                formData.append(fileName, file);
-              }
-            });
-
-            Object.keys(fields).forEach(function (fieldName) {
-              var value = fields[fieldName];
-              if (Array.isArray(value)) {
-                value.forEach(function (val) {
-                  formData.append(fieldName + '[]', val);
-                });
-              } else {
-                formData.append(fieldName, value);
-              }
-            });
+            if ($el.is(':checked')) {
+              return fields[name].push($el.val());
+            }
           }
-
-          formData = formData || fields;
-
-          var options = {};
-          if (data.folderId) {
-            options.folderId = data.folderId;
+          if ($el.is('[data-tinymce]') && typeof tinyMCE !== 'undefined') {
+            var tinymceKey = name;
+            if ($el.attr('id')) {
+              tinymceKey = $el.attr('id');
+            }
+            return fields[name] = tinyMCE.get(tinymceKey).getContent();
           }
-
-          getConnection().then(function (connection) {
-            if (typeof formInstance.submit === 'function') {
-              return formInstance.submit(formData);
-            }
-
-            if (dataSourceEntryId) {
-              return connection.update(dataSourceEntryId, formData, options);
-            }
-
-            return connection.insert(formData, options);
-          }).then(function onSaved() {
-            $formResult.fadeIn();
-            submitPromiseResolve();
-            resetForm();
-          }, function onError(error) {
-            console.error(error);
-          });
+          fields[name] = $el.val();
         });
+
+        if (typeof formInstance.mapData === 'function') {
+          try {
+            fields = formInstance.mapData(fields);
+          } catch (e) {
+            console.error(e);
+          }
+        }
+
+        // Transform to FormData if files were posted
+        var fileNames = Object.keys(files);
+        if (fileNames.length) {
+          if (!Fliplet.Navigator.isOnline()) {
+            return alert('You must be connected to submit this form');
+          }
+
+          formData = new FormData();
+
+          fileNames.forEach(function (fileName) {
+            var fieldFiles = files[fileName];
+            var file;
+
+            for (var i = 0; i < fieldFiles.length; i++) {
+              file = fieldFiles.item(i);
+              formData.append(fileName, file);
+            }
+          });
+
+          Object.keys(fields).forEach(function (fieldName) {
+            var value = fields[fieldName];
+            if (Array.isArray(value)) {
+              value.forEach(function (val) {
+                formData.append(fieldName + '[]', val);
+              });
+            } else {
+              formData.append(fieldName, value);
+            }
+          });
+        }
+
+        formData = formData || fields;
+
+        var options = {};
+        if (data.folderId) {
+          options.folderId = data.folderId;
+        }
+
+        getConnection().then(function (connection) {
+          if (typeof formInstance.submit === 'function') {
+            return formInstance.submit(formData);
+          }
+
+          if (dataSourceEntryId) {
+            return connection.update(dataSourceEntryId, formData, options);
+          }
+
+          return connection.insert(formData, options);
+        }).then(function onSaved() {
+          $formResult.fadeIn();
+          submitPromiseResolve();
+          resetForm();
+        }, function onError(error) {
+          console.error(error);
+        });
+      });
     });
 
     $form.on('click', '[data-start]', function (event) {
