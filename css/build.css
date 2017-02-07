@@ -2,8 +2,13 @@
   position: relative;
 }
 
-.fl-form .form-result {
+.fl-form .form-result,
+.fl-form .form-error {
     display: none;
+}
+
+.fl-form .form-error {
+  margin-top: 20px;
 }
 
 .fl-form .form-submitting {

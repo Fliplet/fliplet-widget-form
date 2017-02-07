@@ -7,6 +7,7 @@
     var $form = $(this);
     var $formHtml = $form.find('.form-html');
     var $formResult = $form.find('.form-result');
+    var $formError = $form.find('.form-error');
     var widgetData = Fliplet.Widget.getData($form.data('form-id'));
     var uuid = $form.data('form-uuid');
     var editModeEnabled = true;
@@ -47,6 +48,7 @@
         });
       }
 
+      $formError.hide();
       Fliplet.Analytics.trackEvent('form', 'submit');
       $form.addClass('submitting');
 
@@ -83,6 +85,7 @@
         });
       }).catch(function onError (error) {
         console.error(error);
+        $formError.fadeIn().scrollTo();
         $form.removeClass('submitting');
       });
     });
@@ -96,7 +99,17 @@
 
     $form.on('reset', function onResetForm() {
       Fliplet.Analytics.trackEvent('form', 'reset');
+      $formError.hide();
     });
+
+    $.fn.scrollTo = function(speed){
+      speed = speed || 400;
+      return $(this).each(function(){
+        $('html, body').animate({
+            scrollTop: $(this).offset().top
+        }, speed);
+      });
+    };
 
     function getConnection() {
       if (!connection) {
