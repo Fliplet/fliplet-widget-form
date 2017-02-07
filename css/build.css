@@ -26,9 +26,29 @@
   pointer-events: none;
 }
 
+@-webkit-keyframes pulse {
+  0%, 100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
 .fl-form.submitting .form-submitting {
   opacity: 1;
   pointer-events: all;
+  -webkit-animation: pulse 3s infinite;
+  animation: pulse 3s infinite;
 }
 
 .fl-form.submitting .form-html {
