@@ -1,6 +1,41 @@
-.fl-form .form-result {
+.fl-form {
+  position: relative;
+}
+
+.fl-form .form-result,
+.fl-form .form-error {
     display: none;
 }
+
+.fl-form .form-error {
+  margin-top: 20px;
+}
+
+.fl-form .form-submitting {
+  padding: 15px;
+  position: absolute;
+  width: 80%;
+  text-align: center;
+  top: 50%;
+  left: 50%;
+  -webkit-transform: translate3d(-50%,-50%,0);
+  transform: translate3d(-50%,-50%,0);
+  -webkit-transition: all 0.2s ease-out;
+  transition: all 0.2s ease-out;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.fl-form.submitting .form-submitting {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.fl-form.submitting .form-html {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
 /* Buttons */
 .btn-primary {
     display: block;

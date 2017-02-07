@@ -7,7 +7,8 @@
     var $form = $(this);
     var $formHtml = $form.find('.form-html');
     var $formResult = $form.find('.form-result');
-    var data = Fliplet.Widget.getData($form.data('form-id'));
+    var $formError = $form.find('.form-error');
+    var widgetData = Fliplet.Widget.getData($form.data('form-id'));
     var uuid = $form.data('form-uuid');
     var editModeEnabled = true;
     var dataSourceId;
@@ -19,7 +20,7 @@
 
     var formInstance = {
       el: this,
-      data: data,
+      data: widgetData,
       connection: connection,
       fillForm: fillForm,
       onSubmit: function () {
@@ -29,170 +30,64 @@
         // Resolves immediate, unless onBeforeTinyMCEInit is replaced
         // with another Promise that resolves with an options object
         return Promise.resolve();
+      },
+      toggleEditMode: function (enabled) {
+        editModeEnabled = !!enabled;
+        resetForm();
       }
     };
-
     forms[uuid] = formInstance;
-
-    function getConnection() {
-      if (!connection) {
-        connection = Fliplet.DataSources.connect(data.dataSourceId, { offline: false });
-      }
-
-      return connection;
-    }
 
     $form.submit(function (event) {
       event.preventDefault();
-      var errors = false;
-      $form.find('[required]').each(function () {
-        var $el = $(this);
-        var name = $el.attr('name');
-        var type = $el.attr('type');
 
-          if (type === 'radio' && !$form.find('[name="'+name+'"]:checked').length) {
-          errors = true;
-          $form.find('[name="'+name+'"]').parents('.radio').addClass('has-error');
-          return;
-        }
-
-        if (type === 'checkbox' && !$el.is(':checked')) {
-          errors = true;
-          $form.find('[name="'+name+'"]').parents('.checkbox').addClass('has-error');
-          return;
-        }
-
-        if ($el.is('[data-tinymce]') && typeof tinyMCE !== 'undefined') {
-          var tinymceKey = name;
-          if ($el.attr('id')) {
-            tinymceKey = $el.attr('id');
-          }
-          if (tinyMCE.get(tinymceKey) && tinyMCE.get(tinymceKey).getDoc()) {
-            if (!tinyMCE.get(tinymceKey).getContent().length) {
-              errors = true;
-              $el.addClass('has-error');
-            }
-            return;
-          }
-        }
-
-        if (!$el.val().length) {
-          errors = true;
-          $el.addClass('has-error');
-          return;
-        }
-      });
-
-      if (errors) {
+      if (!validateForm()) {
         return Fliplet.Navigate.popup({
           popupTitle: 'Required fields',
           popupMessage: 'You need to fill in the required fields'
         });
       }
 
-        Fliplet.Analytics.trackEvent('form', 'submit');
+      $formError.hide();
+      Fliplet.Analytics.trackEvent('form', 'submit');
+      $form.addClass('submitting');
 
-        $formHtml.fadeOut(function () {
-          var fields = {};
-          var files = {};
-          var formData;
-
-          $form.find('[name]').each(function () {
-            var $el = $(this);
-            var name = $el.attr('name');
-            var type = $el.attr('type');
-
-            if (type === 'file') {
-              return files[name] = $el[0].files;
-            }
-            if (type === 'radio') {
-              if ($el.is(':checked')) {
-                return fields[name] = $el.val();
-              }
-            }
-            if (type === 'checkbox') {
-              if (!fields[name]) {
-                fields[name] = [];
-              }
-
-              if ($el.is(':checked')) {
-                return fields[name].push($el.val());
-              }
-            }
-            if ($el.is('[data-tinymce]') && typeof tinyMCE !== 'undefined') {
-              var tinymceKey = name;
-              if ($el.attr('id')) {
-                tinymceKey = $el.attr('id');
-              }
-              return fields[name] = tinyMCE.get(tinymceKey).getContent();
-            }
-            fields[name] = $el.val();
-          });
-
-          if (typeof formInstance.mapData === 'function') {
-            try {
-              fields = formInstance.mapData(fields);
-            } catch (e) {
-              console.error(e);
-            }
-          }
-
-          // Transform to FormData if files were posted
-          var fileNames = Object.keys(files);
-          if (fileNames.length) {
-            if (!Fliplet.Navigator.isOnline()) {
-              return alert('You must be connected to submit this form');
-            }
-
-            formData = new FormData();
-
-            fileNames.forEach(function (fileName) {
-              var fieldFiles = files[fileName];
-              var file;
-
-              for (var i = 0; i < fieldFiles.length; i++) {
-                file = fieldFiles.item(i);
-                formData.append(fileName, file);
-              }
-            });
-
-            Object.keys(fields).forEach(function (fieldName) {
-              var value = fields[fieldName];
-              if (Array.isArray(value)) {
-                value.forEach(function (val) {
-                  formData.append(fieldName + '[]', val);
-                });
-              } else {
-                formData.append(fieldName, value);
-              }
-            });
-          }
-
-          formData = formData || fields;
-
-          var options = {};
-          if (data.folderId) {
-            options.folderId = data.folderId;
-          }
-
-          getConnection().then(function (connection) {
-            if (typeof formInstance.submit === 'function') {
-              return formInstance.submit(formData);
-            }
-
-            if (dataSourceEntryId) {
-              return connection.update(dataSourceEntryId, formData, options);
-            }
-
-            return connection.insert(formData, options);
-          }).then(function onSaved() {
-            $formResult.fadeIn();
-            submitPromiseResolve();
-            resetForm();
-          }, function onError(error) {
-            console.error(error);
-          });
+      if (!Fliplet.Navigator.isOnline()) {
+        Fliplet.Navigate.popup({
+          popupTitle: 'Connection error',
+          popupMessage: 'You must be connected to the Internet to submit this form'
         });
+        return $form.removeClass('submitting');
+      }
+
+      var formData = getFormData();
+      getConnection().then(function (connection) {
+        if (typeof formInstance.submit === 'function') {
+          return formInstance.submit(formData);
+        }
+
+        var options = {};
+        if (widgetData.folderId) {
+          options.folderId = widgetData.folderId;
+        }
+
+        if (dataSourceEntryId) {
+          return connection.update(dataSourceEntryId, formData, options);
+        }
+
+        return connection.insert(formData, options);
+      }).then(function onSaved() {
+        $formHtml.fadeOut(function(){
+          $form.removeClass('submitting');
+          $formResult.fadeIn();
+          submitPromiseResolve();
+          resetForm();
+        });
+      }).catch(function onError (error) {
+        console.error(error);
+        $formError.fadeIn().scrollTo();
+        $form.removeClass('submitting');
+      });
     });
 
     $form.on('click', '[data-start]', function (event) {
@@ -204,12 +99,149 @@
 
     $form.on('reset', function onResetForm() {
       Fliplet.Analytics.trackEvent('form', 'reset');
+      $formError.hide();
     });
 
-    formInstance.toggleEditMode = function (enabled) {
-      editModeEnabled = !!enabled;
-      resetForm();
+    $.fn.scrollTo = function(speed){
+      speed = speed || 400;
+      return $(this).each(function(){
+        $('html, body').animate({
+            scrollTop: $(this).offset().top
+        }, speed);
+      });
     };
+
+    function getConnection() {
+      if (!connection) {
+        connection = Fliplet.DataSources.connect(widgetData.dataSourceId, { offline: false });
+      }
+
+      return connection;
+    }
+
+    function validateForm() {
+      var formIsValid = true;
+      $form.find('[required]').each(function () {
+        var $el = $(this);
+        var name = $el.attr('name');
+        var type = $el.attr('type');
+
+        if (type === 'radio' && !$form.find('[name="'+name+'"]:checked').length) {
+          formIsValid = false;
+          $form.find('[name="'+name+'"]').parents('.radio').addClass('has-error');
+          return;
+        }
+
+        if (type === 'checkbox' && !$el.is(':checked')) {
+          formIsValid = false;
+          $form.find('[name="'+name+'"]').parents('.checkbox').addClass('has-error');
+          return;
+        }
+
+        if ($el.is('[data-tinymce]') && typeof tinyMCE !== 'undefined') {
+          var tinymceKey = name;
+          if ($el.attr('id')) {
+            tinymceKey = $el.attr('id');
+          }
+          if (tinyMCE.get(tinymceKey) && tinyMCE.get(tinymceKey).getDoc()) {
+            if (!tinyMCE.get(tinymceKey).getContent().length) {
+              formIsValid = false;
+              $el.addClass('has-error');
+            }
+            return;
+          }
+        }
+
+        if (!$el.val().length) {
+          formIsValid = false;
+          $el.addClass('has-error');
+          return;
+        }
+      });
+      return formIsValid;
+    }
+
+    function getFormData () {
+      var fields = {};
+      var files = {};
+      var formData = new FormData();
+
+      $form.find('[name]').each(function () {
+        var $el = $(this);
+        var name = $el.attr('name');
+        var type = $el.attr('type');
+
+        if (type === 'file') {
+          return files[name] = $el[0].files;
+        }
+        if (type === 'radio') {
+          if ($el.is(':checked')) {
+            return fields[name] = $el.val();
+          }
+        }
+        if (type === 'checkbox') {
+          if (!fields[name]) {
+            fields[name] = [];
+          }
+
+          if ($el.is(':checked')) {
+            return fields[name].push($el.val());
+          }
+        }
+        if ($el.is('[data-tinymce]') && typeof tinyMCE !== 'undefined') {
+          var tinymceKey = name;
+          if ($el.attr('id')) {
+            tinymceKey = $el.attr('id');
+          }
+          return fields[name] = tinyMCE.get(tinymceKey).getContent();
+        }
+        fields[name] = $el.val();
+      });
+
+      if (typeof formInstance.mapData === 'function') {
+        try {
+          fields = formInstance.mapData(fields);
+        } catch (e) {
+          console.error(e);
+        }
+      }
+
+      // Transform to FormData if files were posted
+      var fileNames = Object.keys(files);
+      if (fileNames.length) {
+        if (!Fliplet.Navigator.isOnline()) {
+          return Fliplet.Navigate.popup({
+            popupTitle: 'Connection error',
+            popupMessage: 'You must be connected to the Internet to submit this form'
+          });;
+        }
+
+        fileNames.forEach(function (fileName) {
+          var fieldFiles = files[fileName];
+          var file;
+
+          for (var i = 0; i < fieldFiles.length; i++) {
+            file = fieldFiles.item(i);
+            formData.append(fileName, file);
+          }
+        });
+
+        Object.keys(fields).forEach(function (fieldName) {
+          var value = fields[fieldName];
+          if (Array.isArray(value)) {
+            value.forEach(function (val) {
+              formData.append(fieldName + '[]', val);
+            });
+          } else {
+            formData.append(fieldName, value);
+          }
+        });
+      }
+
+      formData = formData || fields;
+
+      return formData;
+    }
 
     function resetForm() {
       $form.trigger('reset');
@@ -257,7 +289,7 @@
     }
 
     function bindEditMode() {
-      if (editModeEnabled && Fliplet.Navigate.query.dataSourceId === data.dataSourceId) {
+      if (editModeEnabled && Fliplet.Navigate.query.dataSourceId === widgetData.dataSourceId) {
         getConnection().then(function (connection) {
           dataSourceEntryId = parseInt(Fliplet.Navigate.query.dataSourceEntryId);
           return connection.findById(dataSourceEntryId);
