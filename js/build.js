@@ -17,6 +17,8 @@
     var submitPromise = new Promise(function(resolve, reject){
       submitPromiseResolve = resolve;
     });
+    var images = {};
+    var selectedFileInputName;
 
     var formInstance = {
       el: this,
@@ -100,6 +102,48 @@
     $form.on('reset', function onResetForm() {
       Fliplet.Analytics.trackEvent('form', 'reset');
       $formError.hide();
+    });
+
+    $form.on('click', 'input[type="file"][data-file-image]', function onClickedImageUpload (e) {
+      if (Fliplet.Env.get('platform') === 'web') {
+        return;
+      }
+      e.preventDefault();
+
+      if (typeof navigator.camera === 'undefined') {
+        return Fliplet.Navigate.popup({
+          popupTitle: 'Sorry',
+          popupMessage: 'It looks like your app does not support file upload. Please contact the support team for more information.'
+        });
+      }
+
+      var fileInput = event.target;
+      requestPicture(fileInput)
+        .then(function onRequestedPicture (options) {
+          getPicture(options);
+        });
+    });
+
+    $form.on('change', 'input[type="file"][data-file-image]', function onImageUploadChanged (e) {
+      var files = e.target.files;
+      selectedFileInputName = e.target.name;
+      var file;
+      for (var i = 0, l = files.length; i < l; i++) {
+        if (i > 0) return; // Restrict support to only 1 file at the moment
+
+        file = files[i];
+        //	Prevent any non-image file type from being read.
+      	if(!file.type.match(/image.*/)){
+      		return console.warn("File is not an image: ", file.type);
+      	}
+
+      	//	Create our FileReader and run the results through the render function.
+      	var reader = new FileReader();
+      	reader.onload = function(e){
+      		onSelectedPicture(e.target.result);
+      	};
+      	reader.readAsDataURL(file);
+      }
     });
 
     $.fn.scrollTo = function(speed){
@@ -349,6 +393,130 @@
           });
         });
       }
+    }
+
+    function requestPicture (fileInput) {
+      selectedFileInputName = fileInput.name;
+      var boundingClientRectTarget = fileInput;
+      var boundingRect = boundingClientRectTarget.getBoundingClientRect();
+      while( boundingRect.width === 0 || boundingRect.height === 0 ) {
+        if (!boundingClientRectTarget.parentNode) {
+          break;
+        }
+        boundingClientRectTarget = boundingClientRectTarget.parentNode;
+        boundingRect = boundingClientRectTarget.getBoundingClientRect();
+      }
+
+      return new Promise(function(resolve, reject){
+        var cameraOptions = {
+          boundingRect: boundingRect
+        };
+        navigator.notification.confirm(
+          'How do you want to choose your image?',
+          function onSelectedImageMethod (button) {
+            document.body.focus();
+            switch (button) {
+              case 1:
+                cameraOptions.source = Camera.PictureSourceType.CAMERA;
+                return resolve(cameraOptions);
+              case 2:
+                cameraOptions.source = Camera.PictureSourceType.PHOTOLIBRARY;
+                return resolve(cameraOptions);
+              default:
+                return;
+            }
+          },
+          'Choose Image',
+          ['Take Photo', 'Choose Existing Photo', 'Cancel']
+        );
+      });
+    }
+
+    function getPicture (options) {
+      options = options || {};
+      if (Fliplet.Env.get('platform') === 'web') {
+        return;
+      }
+
+      if (typeof navigator.camera === 'undefined') {
+        return Fliplet.Navigate.popup({
+          popupTitle: 'Sorry',
+          popupMessage: 'It looks like your app does not support file upload. Please contact the support team for more information.'
+        });
+      }
+
+      var popoverOptions = {
+        arrowDir: Camera.PopoverArrowDirection.ARROW_ANY
+      };
+    	if ( typeof options.boundingRect === 'object' ) {
+        var boundingRect = options.boundingRect;
+    		popoverOptions.x = boundingRect.left;
+    		popoverOptions.y = boundingRect.top;
+    		popoverOptions.width = boundingRect.width;
+    		popoverOptions.height = boundingRect.height;
+    	}
+
+      navigator.camera.getPicture(onSelectedPicture, function getPictureSuccess (message) {
+    		console.error('Error getting picture with navigator.camera.getPicture');
+    	},{
+    		quality: 80,
+    		destinationType: Camera.DestinationType.DATA_URL,
+    		sourceType: (options.source) ? options.source : Camera.PictureSourceType.PHOTOLIBRARY,
+    		targetWidth: (options.width) ? options.width : 1024,
+    		targetHeight: (options.height) ? options.height : 1024,
+    		popoverOptions : popoverOptions,
+        encodingType: Camera.EncodingType.JPEG,
+        mediaType: Camera.MediaType.PICTURE,
+        correctOrientation: true  // Corrects Android orientation quirks
+    	});
+    }
+
+    function onSelectedPicture (imageURI) {
+    	images[selectedFileInputName] = {
+    		base64: imageURI
+    	};
+
+      $('canvas[data-file-name="'+selectedFileInputName+'"]').each(function forEachCanvas () {
+        var canvas = this;
+        var imgSrc = (imageURI.indexOf('base64') > -1) ? imageURI : 'data:image/jpeg;base64,' +imageURI;
+      	var canvasWidth = canvas.clientWidth;
+      	var canvasHeight = canvas.clientHeight;
+        canvas.width = canvasWidth;
+        canvas.height = canvasHeight;
+        var canvasRatio = canvasWidth/canvasHeight;
+      	var context = canvas.getContext('2d');
+        context.clearRect(0, 0, canvasWidth, canvasHeight);
+
+      	var img = new Image();
+      	img.onload = function drawImageOnCanvas () {
+          var imgWidth = this.width;
+          var imgHeight = this.height;
+          var imgRatio = imgWidth/imgHeight;
+
+          // Re-interpolate image draw dimensions based to CONTAIN within canvas
+          if (imgRatio < canvasRatio) {
+            // IMAGE RATIO is slimmer than CANVAS RATIO, i.e. margin on the left & right
+            if (imgHeight > canvasHeight) {
+              // Image is taller. Resize image to fit height in canvas first.
+              imgHeight = canvasHeight;
+              imgWidth = imgHeight*imgRatio;
+            }
+          } else {
+            // IMAGE RATIO is wider than CANVAS RATIO, i.e. margin on the top & bottom
+            if (imgWidth > canvasWidth) {
+              // Image is wider. Resize image to fit width in canvas first.
+              imgWidth = canvasWidth;
+              imgHeight = imgWidth/imgRatio;
+            }
+          }
+
+      		var drawX = (canvasWidth > imgWidth) ?  (canvasWidth - imgWidth)/2 : 0 ;
+      		var drawY = (canvasHeight > imgHeight) ?  (canvasHeight - imgHeight)/2 : 0 ;
+
+       		context.drawImage(this, drawX, drawY, imgWidth, imgHeight);
+      	};
+      	img.src = imgSrc;
+      });
     }
 
     Fliplet.Navigator.onReady().then(function () {
