@@ -12,8 +12,7 @@
       "fliplet-core",
       "fliplet-datasources",
       "fliplet-studio-ui",
-      "fliplet-media",
-      "font-awesome"
+      "fliplet-media"
     ],
     "assets": [
       "vendor/codemirror.css",
