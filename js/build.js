@@ -29,10 +29,74 @@
         // Resolves immediate, unless onBeforeTinyMCEInit is replaced
         // with another Promise that resolves with an options object
         return Promise.resolve();
+      },
+      toggleEditMode: function (enabled) {
+        editModeEnabled = !!enabled;
+        resetForm();
       }
     };
-
     forms[uuid] = formInstance;
+
+    $form.submit(function (event) {
+      event.preventDefault();
+
+      if (!validateForm()) {
+        return Fliplet.Navigate.popup({
+          popupTitle: 'Required fields',
+          popupMessage: 'You need to fill in the required fields'
+        });
+      }
+
+      Fliplet.Analytics.trackEvent('form', 'submit');
+      $form.addClass('submitting');
+
+      if (!Fliplet.Navigator.isOnline()) {
+        Fliplet.Navigate.popup({
+          popupTitle: 'Connection error',
+          popupMessage: 'You must be connected to the Internet to submit this form'
+        });
+        return $form.removeClass('submitting');
+      }
+
+      var formData = getFormData();
+      getConnection().then(function (connection) {
+        if (typeof formInstance.submit === 'function') {
+          return formInstance.submit(formData);
+        }
+
+        var options = {};
+        if (widgetData.folderId) {
+          options.folderId = widgetData.folderId;
+        }
+
+        if (dataSourceEntryId) {
+          return connection.update(dataSourceEntryId, formData, options);
+        }
+
+        return connection.insert(formData, options);
+      }).then(function onSaved() {
+        $formHtml.fadeOut(function(){
+          $form.removeClass('submitting');
+          $formResult.fadeIn();
+          submitPromiseResolve();
+          resetForm();
+        });
+      }).catch(function onError (error) {
+        console.error(error);
+        $form.removeClass('submitting');
+      });
+    });
+
+    $form.on('click', '[data-start]', function (event) {
+      event.preventDefault();
+      $formResult.fadeOut(function () {
+        $formHtml.fadeIn();
+      });
+    });
+
+    $form.on('reset', function onResetForm() {
+      Fliplet.Analytics.trackEvent('form', 'reset');
+    });
 
     function getConnection() {
       if (!connection) {
@@ -165,72 +229,6 @@
 
       return formData;
     }
-
-    $form.submit(function (event) {
-      event.preventDefault();
-
-      if (!validateForm()) {
-        return Fliplet.Navigate.popup({
-          popupTitle: 'Required fields',
-          popupMessage: 'You need to fill in the required fields'
-        });
-      }
-
-      Fliplet.Analytics.trackEvent('form', 'submit');
-      $form.addClass('submitting');
-
-      if (!Fliplet.Navigator.isOnline()) {
-        Fliplet.Navigate.popup({
-          popupTitle: 'Connection error',
-          popupMessage: 'You must be connected to the Internet to submit this form'
-        });
-        return $form.removeClass('submitting');
-      }
-
-      var formData = getFormData();
-      getConnection().then(function (connection) {
-        if (typeof formInstance.submit === 'function') {
-          return formInstance.submit(formData);
-        }
-
-        var options = {};
-        if (widgetData.folderId) {
-          options.folderId = widgetData.folderId;
-        }
-
-        if (dataSourceEntryId) {
-          return connection.update(dataSourceEntryId, formData, options);
-        }
-
-        return connection.insert(formData, options);
-      }).then(function onSaved() {
-        $formHtml.fadeOut(function(){
-          $form.removeClass('submitting');
-          $formResult.fadeIn();
-          submitPromiseResolve();
-          resetForm();
-        });
-      }).catch(function onError (error) {
-        console.error(error);
-        $form.removeClass('submitting');
-      });
-    });
-
-    $form.on('click', '[data-start]', function (event) {
-      event.preventDefault();
-      $formResult.fadeOut(function () {
-        $formHtml.fadeIn();
-      });
-    });
-
-    $form.on('reset', function onResetForm() {
-      Fliplet.Analytics.trackEvent('form', 'reset');
-    });
-
-    formInstance.toggleEditMode = function (enabled) {
-      editModeEnabled = !!enabled;
-      resetForm();
-    };
 
     function resetForm() {
       $form.trigger('reset');
