@@ -12,7 +12,8 @@
       "fliplet-core",
       "fliplet-datasources",
       "fliplet-studio-ui",
-      "fliplet-media"
+      "fliplet-media",
+      "font-awesome"
     ],
     "assets": [
       "vendor/codemirror.css",
@@ -27,7 +28,8 @@
     "dependencies": [
       "bootstrap",
       "fliplet-core",
-      "fliplet-datasources"
+      "fliplet-datasources",
+      "font-awesome"
     ],
     "assets": [
       "css/build.css",
