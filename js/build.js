@@ -17,7 +17,7 @@
     var submitPromise = new Promise(function(resolve, reject){
       submitPromiseResolve = resolve;
     });
-    var images = {};
+    var fileImages = {};
     var selectedFileInputName;
 
     var formInstance = {
@@ -197,7 +197,7 @@
           }
         }
 
-        if (type === 'file' && $el.is('[data-file-image]') && !images.hasOwnProperty(name)) {
+        if (type === 'file' && $el.is('[data-file-image]') && !fileImages.hasOwnProperty(name)) {
           formIsValid = false;
           $el.parents('.form-group').addClass('has-error');
           return;
@@ -223,7 +223,16 @@
         var type = $el.attr('type');
 
         if (type === 'file') {
-          return files[name] = $el[0].files;
+          if ($el.is('[data-file-image]')) {
+            return files[name] = {
+              type: 'image',
+              data: fileImages[name].base64
+            };
+          }
+          return files[name] = {
+            type: 'file',
+            data: $el[0].files
+          };
         }
         if (type === 'radio') {
           if ($el.is(':checked')) {
@@ -271,8 +280,12 @@
           var fieldFiles = files[fileName];
           var file;
 
+          if (fieldFiles.type === 'image') {
+            return formData.append(fileName, fieldFiles.data);
+          }
+
           for (var i = 0; i < fieldFiles.length; i++) {
-            file = fieldFiles.item(i);
+            file = fieldFiles.data.item(i);
             formData.append(fileName, file);
           }
         });
@@ -479,13 +492,14 @@
     }
 
     function onSelectedPicture (imageURI) {
-    	images[selectedFileInputName] = {
+      imageURI = (imageURI.indexOf('base64') > -1) ? imageURI : 'data:image/jpeg;base64,' +imageURI;
+    	fileImages[selectedFileInputName] = {
     		base64: imageURI
     	};
 
       $('canvas[data-file-name="'+selectedFileInputName+'"]').each(function forEachCanvas () {
         var canvas = this;
-        var imgSrc = (imageURI.indexOf('base64') > -1) ? imageURI : 'data:image/jpeg;base64,' +imageURI;
+        var imgSrc = imageURI;
       	var canvasWidth = canvas.clientWidth;
       	var canvasHeight = canvas.clientHeight;
         canvas.width = canvasWidth;
@@ -527,7 +541,7 @@
     }
 
     function resetImages () {
-      images = {};
+      fileImages = {};
       selectedFileInputName = null;
       $('canvas[data-file-name]').each(function(){
         this.getContext('2d').clearRect(0, 0, this.width, this.height);
