@@ -284,7 +284,7 @@
             return formData.append(fileName, fieldFiles.data);
           }
 
-          for (var i = 0; i < fieldFiles.length; i++) {
+          for (var i = 0; i < fieldFiles.data.length; i++) {
             file = fieldFiles.data.item(i);
             formData.append(fileName, file);
           }
