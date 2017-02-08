@@ -138,6 +138,8 @@
     $form.on('change', 'input[type="file"][data-file-image]', function onImageUploadChanged (e) {
       var files = e.target.files;
       selectedFileInputName = e.target.name;
+      var customWidth = $(e.target).attr('data-width') || 1024;
+      var customHeight = $(e.target).attr('data-height') || 1024;
       var file;
       for (var i = 0, l = files.length; i < l; i++) {
         if (i > 0) return; // Restrict support to only 1 file at the moment
@@ -151,7 +153,11 @@
       	//	Create our FileReader and run the results through the render function.
       	var reader = new FileReader();
       	reader.onload = function(e){
-      		onSelectedPicture(e.target.result);
+      		onSelectedPicture(e.target.result, {
+            forceResize: true,
+            width: customWidth,
+            height: customHeight
+          });
       	};
       	reader.readAsDataURL(file);
       }
@@ -498,54 +504,89 @@
     	});
     }
 
-    function onSelectedPicture (imageURI) {
+    function onSelectedPicture (imageURI, options) {
+      options = options || {};
       imageURI = (imageURI.indexOf('base64') > -1) ? imageURI : 'data:image/jpeg;base64,' +imageURI;
-    	fileImages[selectedFileInputName] = {
-    		base64: imageURI
-    	};
 
-      $('canvas[data-file-name="'+selectedFileInputName+'"]').each(function forEachCanvas () {
-        var canvas = this;
-        var imgSrc = imageURI;
-      	var canvasWidth = canvas.clientWidth;
-      	var canvasHeight = canvas.clientHeight;
-        canvas.width = canvasWidth;
-        canvas.height = canvasHeight;
-        var canvasRatio = canvasWidth/canvasHeight;
-      	var context = canvas.getContext('2d');
-        context.clearRect(0, 0, canvas.width, canvas.height);
-
-      	var img = new Image();
-      	img.onload = function drawImageOnCanvas () {
-          var imgWidth = this.width;
-          var imgHeight = this.height;
-          var imgRatio = imgWidth/imgHeight;
-
-          // Re-interpolate image draw dimensions based to CONTAIN within canvas
-          if (imgRatio < canvasRatio) {
-            // IMAGE RATIO is slimmer than CANVAS RATIO, i.e. margin on the left & right
-            if (imgHeight > canvasHeight) {
-              // Image is taller. Resize image to fit height in canvas first.
-              imgHeight = canvasHeight;
-              imgWidth = imgHeight*imgRatio;
-            }
-          } else {
-            // IMAGE RATIO is wider than CANVAS RATIO, i.e. margin on the top & bottom
-            if (imgWidth > canvasWidth) {
-              // Image is wider. Resize image to fit width in canvas first.
-              imgWidth = canvasWidth;
-              imgHeight = imgWidth/imgRatio;
-            }
-          }
-
-      		var drawX = (canvasWidth > imgWidth) ?  (canvasWidth - imgWidth)/2 : 0 ;
-      		var drawY = (canvasHeight > imgHeight) ?  (canvasHeight - imgHeight)/2 : 0 ;
-
-       		context.drawImage(this, drawX, drawY, imgWidth, imgHeight);
+      return new Promise(function (resolve, reject) {
+        if (!options.forceResize) {
+          resolve(imageURI);
+        }
+        return resizeFromURI(imageURI, options.width, options.height, resolve, reject);
+      }).then(function imageURIReady (imageURI) {
+        fileImages[selectedFileInputName] = {
+      		base64: imageURI
       	};
-      	img.src = imgSrc;
+
+        $('canvas[data-file-name="'+selectedFileInputName+'"]').each(function forEachCanvas () {
+          var canvas = this;
+          var imgSrc = imageURI;
+        	var canvasWidth = canvas.clientWidth;
+        	var canvasHeight = canvas.clientHeight;
+          canvas.width = canvasWidth;
+          canvas.height = canvasHeight;
+          var canvasRatio = canvasWidth/canvasHeight;
+        	var context = canvas.getContext('2d');
+          context.clearRect(0, 0, canvas.width, canvas.height);
+
+        	var img = new Image();
+        	img.onload = function imageLoadedFromURI () {
+            drawImageOnCanvas(this, canvas);
+        	};
+        	img.src = imgSrc;
+        });
+      }).catch(function(){
+        console.error('Unable to resize from URI');
       });
     }
+
+    function resizeFromURI (uri, width, height, resolve, reject) {
+      var img = new Image;
+      img.onload = function imageLoadedFromURI () {
+        // create an off-screen canvas
+        var canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        // draw source image into the off-screen canvas:
+        drawImageOnCanvas(this, canvas);
+        // encode image to data-uri with base64 version of compressed image
+        return resolve(canvas.toDataURL('image/jpeg', 80));
+      };
+      img.onerror = reject;
+      img.src = uri;
+    }
+
+    function drawImageOnCanvas (img, canvas) {
+      var imgWidth = img.width;
+      var imgHeight = img.height;
+      var imgRatio = imgWidth/imgHeight;
+      var canvasWidth = canvas.width;
+      var canvasHeight = canvas.height;
+      var canvasRatio = canvasWidth/canvasHeight;
+      var context = canvas.getContext('2d');
+
+      // Re-interpolate image draw dimensions based to CONTAIN within canvas
+      if (imgRatio < canvasRatio) {
+        // IMAGE RATIO is slimmer than CANVAS RATIO, i.e. margin on the left & right
+        if (imgHeight > canvasHeight) {
+          // Image is taller. Resize image to fit height in canvas first.
+          imgHeight = canvasHeight;
+          imgWidth = imgHeight*imgRatio;
+        }
+      } else {
+        // IMAGE RATIO is wider than CANVAS RATIO, i.e. margin on the top & bottom
+        if (imgWidth > canvasWidth) {
+          // Image is wider. Resize image to fit width in canvas first.
+          imgWidth = canvasWidth;
+          imgHeight = imgWidth/imgRatio;
+        }
+      }
+
+      var drawX = (canvasWidth > imgWidth) ?  (canvasWidth - imgWidth)/2 : 0 ;
+      var drawY = (canvasHeight > imgHeight) ?  (canvasHeight - imgHeight)/2 : 0 ;
+
+      context.drawImage(img, drawX, drawY, imgWidth, imgHeight);
+    };
 
     function resetImages () {
       fileImages = {};
