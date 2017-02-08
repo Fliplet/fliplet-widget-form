@@ -101,6 +101,7 @@
 
     $form.on('reset', function onResetForm() {
       Fliplet.Analytics.trackEvent('form', 'reset');
+      resetImages();
       $formError.hide();
     });
 
@@ -165,7 +166,7 @@
 
     function validateForm() {
       var formIsValid = true;
-      $form.find('[required]').each(function () {
+      $form.find('.has-error').removeClass('has-error').end().find('[required]').each(function () {
         var $el = $(this);
         var name = $el.attr('name');
         var type = $el.attr('type');
@@ -190,15 +191,21 @@
           if (tinyMCE.get(tinymceKey) && tinyMCE.get(tinymceKey).getDoc()) {
             if (!tinyMCE.get(tinymceKey).getContent().length) {
               formIsValid = false;
-              $el.addClass('has-error');
+              $el.parents('.form-group').addClass('has-error');
             }
             return;
           }
         }
 
+        if (type === 'file' && $el.is('[data-file-image]') && !images.hasOwnProperty(name)) {
+          formIsValid = false;
+          $el.parents('.form-group').addClass('has-error');
+          return;
+        }
+
         if (!$el.val().length) {
           formIsValid = false;
-          $el.addClass('has-error');
+          $el.parents('.form-group').addClass('has-error');
           return;
         }
       });
@@ -485,7 +492,7 @@
         canvas.height = canvasHeight;
         var canvasRatio = canvasWidth/canvasHeight;
       	var context = canvas.getContext('2d');
-        context.clearRect(0, 0, canvasWidth, canvasHeight);
+        context.clearRect(0, 0, canvas.width, canvas.height);
 
       	var img = new Image();
       	img.onload = function drawImageOnCanvas () {
@@ -516,6 +523,14 @@
        		context.drawImage(this, drawX, drawY, imgWidth, imgHeight);
       	};
       	img.src = imgSrc;
+      });
+    }
+
+    function resetImages () {
+      images = {};
+      selectedFileInputName = null;
+      $('canvas[data-file-name]').each(function(){
+        this.getContext('2d').clearRect(0, 0, this.width, this.height);
       });
     }
 
