@@ -275,6 +275,8 @@
           // No files selected or empty Base64 string
           return;
         }
+        // Deletes hidden fields with the original file reference
+        delete fields[fileName];
 
         if (fieldFiles.type === 'image') {
           return formData.append(fileName, fieldFiles.data);
@@ -284,9 +286,6 @@
           file = fieldFiles.data.item(i);
           formData.append(fileName, file);
         }
-
-        // Deletes hidden fields with the original file reference
-        delete fields[fileName];
       });
 
       Object.keys(fields).forEach(function (fieldName) {
