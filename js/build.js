@@ -267,40 +267,30 @@
       }
 
       // Transform to FormData if files were posted
-      var fileNames = Object.keys(files);
-      if (fileNames.length) {
-        if (!Fliplet.Navigator.isOnline()) {
-          return Fliplet.Navigate.popup({
-            popupTitle: 'Connection error',
-            popupMessage: 'You must be connected to the Internet to submit this form'
-          });;
+      Object.keys(files).forEach(function (fileName) {
+        var fieldFiles = files[fileName];
+        var file;
+
+        if (fieldFiles.type === 'image') {
+          return formData.append(fileName, fieldFiles.data);
         }
 
-        fileNames.forEach(function (fileName) {
-          var fieldFiles = files[fileName];
-          var file;
+        for (var i = 0; i < fieldFiles.data.length; i++) {
+          file = fieldFiles.data.item(i);
+          formData.append(fileName, file);
+        }
+      });
 
-          if (fieldFiles.type === 'image') {
-            return formData.append(fileName, fieldFiles.data);
-          }
-
-          for (var i = 0; i < fieldFiles.data.length; i++) {
-            file = fieldFiles.data.item(i);
-            formData.append(fileName, file);
-          }
-        });
-
-        Object.keys(fields).forEach(function (fieldName) {
-          var value = fields[fieldName];
-          if (Array.isArray(value)) {
-            value.forEach(function (val) {
-              formData.append(fieldName + '[]', val);
-            });
-          } else {
-            formData.append(fieldName, value);
-          }
-        });
-      }
+      Object.keys(fields).forEach(function (fieldName) {
+        var value = fields[fieldName];
+        if (Array.isArray(value)) {
+          value.forEach(function (val) {
+            formData.append(fieldName + '[]', val);
+          });
+        } else {
+          formData.append(fieldName, value);
+        }
+      });
 
       formData = formData || fields;
 
