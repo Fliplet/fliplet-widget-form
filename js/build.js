@@ -145,7 +145,7 @@
         if (i > 0) return; // Restrict support to only 1 file at the moment
 
         file = files[i];
-        //	Prevent any non-image file type from being read.
+        // Prevent any non-image file type from being read.
       	if(!file.type.match(/image.*/)){
       		return console.warn("File is not an image: ", file.type);
       	}
