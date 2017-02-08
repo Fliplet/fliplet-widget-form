@@ -8,6 +8,7 @@
     var $formHtml = $form.find('.form-html');
     var $formResult = $form.find('.form-result');
     var $formError = $form.find('.form-error');
+    var $formSubmitting = $form.find('.form-submitting');
     var widgetData = Fliplet.Widget.getData($form.data('form-id'));
     var uuid = $form.data('form-uuid');
     var editModeEnabled = true;
@@ -53,6 +54,7 @@
       $formError.hide();
       Fliplet.Analytics.trackEvent('form', 'submit');
       $form.addClass('submitting');
+      $formSubmitting.scrollTo();
 
       if (!Fliplet.Navigator.isOnline()) {
         Fliplet.Navigate.popup({
