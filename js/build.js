@@ -119,8 +119,16 @@
       }
 
       var fileInput = event.target;
+      var customWidth = $(fileInput).attr('data-width');
+      var customHeight = $(fileInput).attr('data-height');
       requestPicture(fileInput)
         .then(function onRequestedPicture (options) {
+          if (customWidth) {
+            options.width = parseInt(customWidth);
+          }
+          if (customHeight) {
+            options.height = parseInt(customHeight);
+          }
           getPicture(options);
         });
     });
