@@ -455,8 +455,10 @@
               case 2:
                 cameraOptions.source = Camera.PictureSourceType.PHOTOLIBRARY;
                 return resolve(cameraOptions);
-              default:
+              case 3:
                 return;
+              default:
+                return reject('Not implemented');
             }
           },
           'Choose Image',
