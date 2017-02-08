@@ -271,6 +271,11 @@
         var fieldFiles = files[fileName];
         var file;
 
+        if (!fieldFiles.data.length) {
+          // No files selected or empty Base64 string
+          return;
+        }
+
         if (fieldFiles.type === 'image') {
           return formData.append(fileName, fieldFiles.data);
         }
@@ -279,6 +284,9 @@
           file = fieldFiles.data.item(i);
           formData.append(fileName, file);
         }
+
+        // Deletes hidden fields with the original file reference
+        delete fields[fileName];
       });
 
       Object.keys(fields).forEach(function (fieldName) {
