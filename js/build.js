@@ -223,7 +223,7 @@
         var type = $el.attr('type');
 
         if (type === 'file') {
-          if ($el.is('[data-file-image]')) {
+          if ($el.is('[data-file-image]') && fileImages.hasOwnProperty(name)) {
             return files[name] = {
               type: 'image',
               data: fileImages[name].base64
