@@ -216,7 +216,11 @@
           }
         }
 
-        if (type === 'file' && $el.is('[data-file-image]') && !fileImages.hasOwnProperty(name)) {
+        if (type === 'file' && $el.is('[data-file-image]')) {
+          if (fileImages.hasOwnProperty(name)) {
+            // Image field has files selected
+            return;
+          }
           formIsValid = false;
           $el.parents('.form-group').addClass('has-error');
           return;
