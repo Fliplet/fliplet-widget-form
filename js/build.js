@@ -8,6 +8,7 @@
     var $formHtml = $form.find('.form-html');
     var $formResult = $form.find('.form-result');
     var $formError = $form.find('.form-error');
+    var $formSubmitting = $form.find('.form-submitting');
     var widgetData = Fliplet.Widget.getData($form.data('form-id'));
     var uuid = $form.data('form-uuid');
     var editModeEnabled = true;
@@ -17,6 +18,8 @@
     var submitPromise = new Promise(function(resolve, reject){
       submitPromiseResolve = resolve;
     });
+    var fileImages = {};
+    var selectedFileInputName;
 
     var formInstance = {
       el: this,
@@ -51,6 +54,7 @@
       $formError.hide();
       Fliplet.Analytics.trackEvent('form', 'submit');
       $form.addClass('submitting');
+      $formSubmitting.scrollTo();
 
       if (!Fliplet.Navigator.isOnline()) {
         Fliplet.Navigate.popup({
@@ -99,7 +103,67 @@
 
     $form.on('reset', function onResetForm() {
       Fliplet.Analytics.trackEvent('form', 'reset');
+      resetImages();
       $formError.hide();
+    });
+
+    $form.on('click', 'input[type="file"][data-file-image]', function onClickedImageUpload (e) {
+      if (Fliplet.Env.get('platform') === 'web') {
+        return;
+      }
+      e.preventDefault();
+
+      if (typeof navigator.camera === 'undefined') {
+        return Fliplet.Navigate.popup({
+          popupTitle: 'Sorry',
+          popupMessage: 'It looks like your app does not support file upload. Please contact the support team for more information.'
+        });
+      }
+
+      var fileInput = event.target;
+      var customWidth = $(fileInput).attr('data-width');
+      var customHeight = $(fileInput).attr('data-height');
+      requestPicture(fileInput)
+        .then(function onRequestedPicture (options) {
+          if (customWidth) {
+            options.width = parseInt(customWidth);
+          }
+          if (customHeight) {
+            options.height = parseInt(customHeight);
+          }
+          getPicture(options);
+        });
+    });
+
+    $form.on('change', 'input[type="file"][data-file-image]', function onImageUploadChanged (e) {
+      var files = e.target.files;
+      selectedFileInputName = e.target.name;
+      var customWidth = $(e.target).attr('data-width') || 1024;
+      var customHeight = $(e.target).attr('data-height') || 1024;
+      var file;
+      for (var i = 0, l = files.length; i < l; i++) {
+        if (i > 0) {
+          // Restrict support to only 1 file at the moment
+          return;
+        }
+
+        file = files[i];
+        // Prevent any non-image file type from being read.
+      	if(!file.type.match(/image.*/)){
+      		return console.warn("File is not an image: ", file.type);
+      	}
+
+      	//	Create our FileReader and run the results through the render function.
+      	var reader = new FileReader();
+      	reader.onload = function(e){
+      		onSelectedPicture(e.target.result, {
+            forceResize: true,
+            width: customWidth,
+            height: customHeight
+          });
+      	};
+      	reader.readAsDataURL(file);
+      }
     });
 
     $.fn.scrollTo = function(speed){
@@ -121,7 +185,7 @@
 
     function validateForm() {
       var formIsValid = true;
-      $form.find('[required]').each(function () {
+      $form.find('.has-error').removeClass('has-error').end().find('[required]').each(function () {
         var $el = $(this);
         var name = $el.attr('name');
         var type = $el.attr('type');
@@ -146,15 +210,25 @@
           if (tinyMCE.get(tinymceKey) && tinyMCE.get(tinymceKey).getDoc()) {
             if (!tinyMCE.get(tinymceKey).getContent().length) {
               formIsValid = false;
-              $el.addClass('has-error');
+              $el.parents('.form-group').addClass('has-error');
             }
             return;
           }
         }
 
+        if (type === 'file' && $el.is('[data-file-image]')) {
+          if (fileImages.hasOwnProperty(name)) {
+            // Image field has files selected
+            return;
+          }
+          formIsValid = false;
+          $el.parents('.form-group').addClass('has-error');
+          return;
+        }
+
         if (!$el.val().length) {
           formIsValid = false;
-          $el.addClass('has-error');
+          $el.parents('.form-group').addClass('has-error');
           return;
         }
       });
@@ -172,7 +246,16 @@
         var type = $el.attr('type');
 
         if (type === 'file') {
-          return files[name] = $el[0].files;
+          if ($el.is('[data-file-image]') && fileImages.hasOwnProperty(name)) {
+            return files[name] = {
+              type: 'image',
+              data: fileImages[name].base64
+            };
+          }
+          return files[name] = {
+            type: 'file',
+            data: $el[0].files
+          };
         }
         if (type === 'radio') {
           if ($el.is(':checked')) {
@@ -207,36 +290,37 @@
       }
 
       // Transform to FormData if files were posted
-      var fileNames = Object.keys(files);
-      if (fileNames.length) {
-        if (!Fliplet.Navigator.isOnline()) {
-          return Fliplet.Navigate.popup({
-            popupTitle: 'Connection error',
-            popupMessage: 'You must be connected to the Internet to submit this form'
-          });;
+      Object.keys(files).forEach(function (fileName) {
+        var fieldFiles = files[fileName];
+        var file;
+
+        if (!fieldFiles.data.length) {
+          // No files selected or empty Base64 string
+          return;
+        }
+        // Deletes hidden fields with the original file reference
+        delete fields[fileName];
+
+        if (fieldFiles.type === 'image') {
+          return formData.append(fileName, fieldFiles.data);
         }
 
-        fileNames.forEach(function (fileName) {
-          var fieldFiles = files[fileName];
-          var file;
+        for (var i = 0; i < fieldFiles.data.length; i++) {
+          file = fieldFiles.data.item(i);
+          formData.append(fileName, file);
+        }
+      });
 
-          for (var i = 0; i < fieldFiles.length; i++) {
-            file = fieldFiles.item(i);
-            formData.append(fileName, file);
-          }
-        });
-
-        Object.keys(fields).forEach(function (fieldName) {
-          var value = fields[fieldName];
-          if (Array.isArray(value)) {
-            value.forEach(function (val) {
-              formData.append(fieldName + '[]', val);
-            });
-          } else {
-            formData.append(fieldName, value);
-          }
-        });
-      }
+      Object.keys(fields).forEach(function (fieldName) {
+        var value = fields[fieldName];
+        if (Array.isArray(value)) {
+          value.forEach(function (val) {
+            formData.append(fieldName + '[]', val);
+          });
+        } else {
+          formData.append(fieldName, value);
+        }
+      });
 
       formData = formData || fields;
 
@@ -349,6 +433,176 @@
           });
         });
       }
+    }
+
+    function requestPicture (fileInput) {
+      selectedFileInputName = fileInput.name;
+      var boundingClientRectTarget = fileInput;
+      var boundingRect = boundingClientRectTarget.getBoundingClientRect();
+      while( boundingRect.width === 0 || boundingRect.height === 0 ) {
+        if (!boundingClientRectTarget.parentNode) {
+          break;
+        }
+        boundingClientRectTarget = boundingClientRectTarget.parentNode;
+        boundingRect = boundingClientRectTarget.getBoundingClientRect();
+      }
+
+      return new Promise(function(resolve, reject){
+        var cameraOptions = {
+          boundingRect: boundingRect
+        };
+        navigator.notification.confirm(
+          'How do you want to choose your image?',
+          function onSelectedImageMethod (button) {
+            document.body.focus();
+            switch (button) {
+              case 1:
+                cameraOptions.source = Camera.PictureSourceType.CAMERA;
+                return resolve(cameraOptions);
+              case 2:
+                cameraOptions.source = Camera.PictureSourceType.PHOTOLIBRARY;
+                return resolve(cameraOptions);
+              case 3:
+                return;
+              default:
+                return reject('Not implemented');
+            }
+          },
+          'Choose Image',
+          ['Take Photo', 'Choose Existing Photo', 'Cancel']
+        );
+      });
+    }
+
+    function getPicture (options) {
+      options = options || {};
+      if (Fliplet.Env.get('platform') === 'web') {
+        return;
+      }
+
+      if (typeof navigator.camera === 'undefined') {
+        return Fliplet.Navigate.popup({
+          popupTitle: 'Sorry',
+          popupMessage: 'It looks like your app does not support file upload. Please contact the support team for more information.'
+        });
+      }
+
+      var popoverOptions = {
+        arrowDir: Camera.PopoverArrowDirection.ARROW_ANY
+      };
+    	if ( typeof options.boundingRect === 'object' ) {
+        var boundingRect = options.boundingRect;
+    		popoverOptions.x = boundingRect.left;
+    		popoverOptions.y = boundingRect.top;
+    		popoverOptions.width = boundingRect.width;
+    		popoverOptions.height = boundingRect.height;
+    	}
+
+      navigator.camera.getPicture(onSelectedPicture, function getPictureSuccess (message) {
+    		console.error('Error getting picture with navigator.camera.getPicture');
+    	},{
+    		quality: 80,
+    		destinationType: Camera.DestinationType.DATA_URL,
+    		sourceType: (options.source) ? options.source : Camera.PictureSourceType.PHOTOLIBRARY,
+    		targetWidth: (options.width) ? options.width : 1024,
+    		targetHeight: (options.height) ? options.height : 1024,
+    		popoverOptions : popoverOptions,
+        encodingType: Camera.EncodingType.JPEG,
+        mediaType: Camera.MediaType.PICTURE,
+        correctOrientation: true  // Corrects Android orientation quirks
+    	});
+    }
+
+    function onSelectedPicture (imageURI, options) {
+      options = options || {};
+      imageURI = (imageURI.indexOf('base64') > -1) ? imageURI : 'data:image/jpeg;base64,' +imageURI;
+
+      return new Promise(function (resolve, reject) {
+        if (!options.forceResize) {
+          resolve(imageURI);
+        }
+        return resizeFromURI(imageURI, options.width, options.height, resolve, reject);
+      }).then(function imageURIReady (imageURI) {
+        fileImages[selectedFileInputName] = {
+      		base64: imageURI
+      	};
+
+        $('canvas[data-file-name="'+selectedFileInputName+'"]').each(function forEachCanvas () {
+          var canvas = this;
+          var imgSrc = imageURI;
+        	var canvasWidth = canvas.clientWidth;
+        	var canvasHeight = canvas.clientHeight;
+          canvas.width = canvasWidth;
+          canvas.height = canvasHeight;
+          var canvasRatio = canvasWidth/canvasHeight;
+        	var context = canvas.getContext('2d');
+          context.clearRect(0, 0, canvas.width, canvas.height);
+
+        	var img = new Image();
+        	img.onload = function imageLoadedFromURI () {
+            drawImageOnCanvas(this, canvas);
+        	};
+        	img.src = imgSrc;
+        });
+      }).catch(function(){
+        console.error('Unable to resize from URI');
+      });
+    }
+
+    function resizeFromURI (uri, width, height, resolve, reject) {
+      var img = new Image;
+      img.onload = function imageLoadedFromURI () {
+        // create an off-screen canvas
+        var canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        // draw source image into the off-screen canvas:
+        drawImageOnCanvas(this, canvas);
+        // encode image to data-uri with base64 version of compressed image
+        return resolve(canvas.toDataURL('image/jpeg', 80));
+      };
+      img.onerror = reject;
+      img.src = uri;
+    }
+
+    function drawImageOnCanvas (img, canvas) {
+      var imgWidth = img.width;
+      var imgHeight = img.height;
+      var imgRatio = imgWidth/imgHeight;
+      var canvasWidth = canvas.width;
+      var canvasHeight = canvas.height;
+      var canvasRatio = canvasWidth/canvasHeight;
+      var context = canvas.getContext('2d');
+
+      // Re-interpolate image draw dimensions based to CONTAIN within canvas
+      if (imgRatio < canvasRatio) {
+        // IMAGE RATIO is slimmer than CANVAS RATIO, i.e. margin on the left & right
+        if (imgHeight > canvasHeight) {
+          // Image is taller. Resize image to fit height in canvas first.
+          imgHeight = canvasHeight;
+          imgWidth = imgHeight*imgRatio;
+        }
+      } else {
+        // IMAGE RATIO is wider than CANVAS RATIO, i.e. margin on the top & bottom
+        if (imgWidth > canvasWidth) {
+          // Image is wider. Resize image to fit width in canvas first.
+          imgWidth = canvasWidth;
+          imgHeight = imgWidth/imgRatio;
+        }
+      }
+
+      var drawX = (canvasWidth > imgWidth) ?  (canvasWidth - imgWidth)/2 : 0 ;
+      var drawY = (canvasHeight > imgHeight) ?  (canvasHeight - imgHeight)/2 : 0 ;
+
+      context.drawImage(img, drawX, drawY, imgWidth, imgHeight);
+    };
+
+    function resetImages () {
+      fileImages = {};
+      selectedFileInputName = null;
+      $('canvas[data-file-name]').each(function(){
+        this.getContext('2d').clearRect(0, 0, this.width, this.height);
+      });
     }
 
     Fliplet.Navigator.onReady().then(function () {

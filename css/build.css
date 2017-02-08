@@ -26,9 +26,29 @@
   pointer-events: none;
 }
 
+@-webkit-keyframes pulse {
+  0%, 100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
 .fl-form.submitting .form-submitting {
   opacity: 1;
   pointer-events: all;
+  -webkit-animation: pulse 3s infinite;
+  animation: pulse 3s infinite;
 }
 
 .fl-form.submitting .form-html {
@@ -485,6 +505,44 @@ textarea.form-control {
 .form-group .mce-btn-group {
   float: none;
 }
+
+/* File upload */
+
+.file-upload {
+  position: relative;
+  overflow: hidden;
+  padding-right: 44px;
+  padding-left: 44px;
+}
+
+.file-upload > canvas {
+  position: absolute;
+  width: 36px;
+  height: 36px;
+  top: 4px;
+  left: 4px;
+  border-radius: 5px;
+}
+
+.file-upload > .fa {
+  display: block;
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  line-height: 20px;
+  font-size: 16px;
+  top: 50%;
+  margin-top: -10px;
+  right: 10px;
+  color: #FFF;
+  opacity: 0.5;
+}
+
+.file-upload > input[type="file"] {
+    display: none;
+}
+
+/* TinyMCE source code area */
 
 .mce-window[aria-label="Source code"] textarea {
   font-family: monospace;
