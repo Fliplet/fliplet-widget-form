@@ -142,7 +142,10 @@
       var customHeight = $(e.target).attr('data-height') || 1024;
       var file;
       for (var i = 0, l = files.length; i < l; i++) {
-        if (i > 0) return; // Restrict support to only 1 file at the moment
+        if (i > 0) {
+          // Restrict support to only 1 file at the moment
+          return;
+        }
 
         file = files[i];
         // Prevent any non-image file type from being read.
