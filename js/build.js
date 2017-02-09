@@ -138,8 +138,8 @@
     $form.on('change', 'input[type="file"][data-file-image]', function onImageUploadChanged (e) {
       var files = e.target.files;
       selectedFileInputName = e.target.name;
-      var customWidth = $(e.target).attr('data-width') || 1024;
-      var customHeight = $(e.target).attr('data-height') || 1024;
+      var maxWidth = $(e.target).attr('data-width') || 1024;
+      var maxHeight = $(e.target).attr('data-height') || 1024;
       var file;
       for (var i = 0, l = files.length; i < l; i++) {
         if (i > 0) {
@@ -153,16 +153,7 @@
       		return console.warn("File is not an image: ", file.type);
       	}
 
-      	//	Create our FileReader and run the results through the render function.
-      	var reader = new FileReader();
-      	reader.onload = function(e){
-      		onSelectedPicture(e.target.result, {
-            forceResize: true,
-            width: customWidth,
-            height: customHeight
-          });
-      	};
-      	reader.readAsDataURL(file);
+        processWebSelectedImage(file, maxWidth, maxHeight);
       }
     });
 
@@ -435,6 +426,28 @@
       }
     }
 
+    function processWebSelectedImage (file, maxWidth, maxHeight) {
+      // Parse meta data for EXIF
+      loadImage.parseMetaData(
+        file,
+        function(data){
+          loadImage(
+            file,
+            function(canvas){
+              onSelectedPicture(canvas.toDataURL('image/jpeg', 80));
+            },
+            {
+              canvas: true,
+              maxWidth: maxWidth,
+              maxHeight: maxHeight,
+              // Use EXIF data to adjust rotation
+              orientation: (data.exif) ? data.exif.get('Orientation') : true,
+            }
+          );
+        }
+      );
+    }
+
     function requestPicture (fileInput) {
       selectedFileInputName = fileInput.name;
       var boundingClientRectTarget = fileInput;
@@ -513,56 +526,30 @@
     	});
     }
 
-    function onSelectedPicture (imageURI, options) {
-      options = options || {};
+    function onSelectedPicture (imageURI) {
       imageURI = (imageURI.indexOf('base64') > -1) ? imageURI : 'data:image/jpeg;base64,' +imageURI;
 
-      return new Promise(function (resolve, reject) {
-        if (!options.forceResize) {
-          resolve(imageURI);
-        }
-        return resizeFromURI(imageURI, options.width, options.height, resolve, reject);
-      }).then(function imageURIReady (imageURI) {
-        fileImages[selectedFileInputName] = {
-      		base64: imageURI
-      	};
-
-        $('canvas[data-file-name="'+selectedFileInputName+'"]').each(function forEachCanvas () {
-          var canvas = this;
-          var imgSrc = imageURI;
-        	var canvasWidth = canvas.clientWidth;
-        	var canvasHeight = canvas.clientHeight;
-          canvas.width = canvasWidth;
-          canvas.height = canvasHeight;
-          var canvasRatio = canvasWidth/canvasHeight;
-        	var context = canvas.getContext('2d');
-          context.clearRect(0, 0, canvas.width, canvas.height);
-
-        	var img = new Image();
-        	img.onload = function imageLoadedFromURI () {
-            drawImageOnCanvas(this, canvas);
-        	};
-        	img.src = imgSrc;
-        });
-      }).catch(function(){
-        console.error('Unable to resize from URI');
-      });
-    }
-
-    function resizeFromURI (uri, width, height, resolve, reject) {
-      var img = new Image;
-      img.onload = function imageLoadedFromURI () {
-        // create an off-screen canvas
-        var canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        // draw source image into the off-screen canvas:
-        drawImageOnCanvas(this, canvas);
-        // encode image to data-uri with base64 version of compressed image
-        return resolve(canvas.toDataURL('image/jpeg', 80));
+      fileImages[selectedFileInputName] = {
+        base64: imageURI
       };
-      img.onerror = reject;
-      img.src = uri;
+
+      $('canvas[data-file-name="'+selectedFileInputName+'"]').each(function forEachCanvas () {
+        var canvas = this;
+        var imgSrc = imageURI;
+        var canvasWidth = canvas.clientWidth;
+        var canvasHeight = canvas.clientHeight;
+        canvas.width = canvasWidth;
+        canvas.height = canvasHeight;
+        var canvasRatio = canvasWidth/canvasHeight;
+        var context = canvas.getContext('2d');
+        context.clearRect(0, 0, canvas.width, canvas.height);
+
+        var img = new Image();
+        img.onload = function imageLoadedFromURI () {
+          drawImageOnCanvas(this, canvas);
+        };
+        img.src = imgSrc;
+      });
     }
 
     function drawImageOnCanvas (img, canvas) {
