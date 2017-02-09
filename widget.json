@@ -32,6 +32,7 @@
     ],
     "assets": [
       "css/build.css",
+      "vendor/load-image.all.min.js",
       "js/build.js"
     ]
   }
