@@ -251,6 +251,8 @@
         if (type === 'radio') {
           if ($el.is(':checked')) {
             return fields[name] = $el.val();
+          } else {
+            return;
           }
         }
         if (type === 'checkbox') {
