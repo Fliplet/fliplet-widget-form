@@ -3,9 +3,14 @@
   "package": "com.fliplet.form",
   "version": "1.0.0",
   "icon": "img/icon.png",
-  "tags": ["type:component", "category:general"],
+  "tags": [
+    "type:component",
+    "category:general"
+  ],
   "provider_only": false,
-  "references": [],
+  "references": [
+    "dataSourceId:dataSource"
+  ],
   "html_tag": "div",
   "interface": {
     "dependencies": [
