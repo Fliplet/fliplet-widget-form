@@ -9,7 +9,8 @@
   ],
   "provider_only": false,
   "references": [
-    "dataSourceId:dataSource"
+    "dataSourceId:dataSource",
+    "folderId:mediaFolder"
   ],
   "html_tag": "div",
   "interface": {
