@@ -268,6 +268,12 @@
 
           return;
         }
+        if (type === 'number') {
+          var value = $el.val();
+          var cleanValue = value.replace(/-|\s/g, '');
+
+          return fields[name] = cleanValue;
+        }
         if ($el.is('[data-tinymce]') && typeof tinyMCE !== 'undefined') {
           var tinymceKey = name;
           if ($el.attr('id')) {
