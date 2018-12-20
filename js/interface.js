@@ -3,6 +3,7 @@ var data = Fliplet.Widget.getData() || {};
 var $dataSource = $('select[name="dataSource"]');
 var $mediaFolder = $('select[name="mediaFolder"]');
 var organizationId = Fliplet.Env.get('organizationId');
+var appId = Fliplet.Env.get('appId');
 
 var defaultForm = $('#defaultFormTemplate').html();
 var defaultResult = $('#defaultResultTemplate').html();
@@ -38,7 +39,8 @@ Fliplet.Widget.onSaveRequest(function () {
 });
 
 Fliplet.DataSources.get({
-  organizationId: organizationId
+  organizationId: organizationId,
+  appId: appId
 }).then(function (dataSources) {
   dataSources.forEach(function (d) {
     $dataSource.append('<option value="' + d.id + '">' + d.name + '</option>');
